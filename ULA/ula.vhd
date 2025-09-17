@@ -10,7 +10,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-entity ULA is 
+entity ALU is 
     port (
         clk : in std_logic;
         ent0 : in unsigned(15 downto 0);     -- First 16 bits input
@@ -24,7 +24,7 @@ entity ULA is
         isNegative : out std_logic
     )
 
-architecture a_ULA of ULA is
+architecture a_ALU of ALU is
   begin
     output <= (ent0 + ent1) when set_op = "00" else  -- Sum operation
               (ent0 - ent1) when set_op = "01" else  -- Subtraction operation
