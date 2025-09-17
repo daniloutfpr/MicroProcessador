@@ -16,6 +16,7 @@ entity ALU is
         ent0 : in unsigned(15 downto 0);     -- First 16 bits input
         ent1 : in unsigned(15 downto 0);     -- Second 16 bits input
         sel_op : in unsigned(1 downto 0);    -- 4x (different operations)
+
         output : out unsigned (15 downto 0); -- 16 bits output for the ALU
         --operation flags
         carry : out std_logic;
@@ -25,18 +26,22 @@ entity ALU is
     )
 
 architecture a_ALU of ALU is
+  
+  signal result: unsigned (16 down to 0);
+
   begin
-    output <= (ent0 + ent1) when sel_op = "00" else  -- Sum operation
-              (ent0 - ent1) when sel_op = "01" else  -- Subtraction operation
+    result <= (("0" & ent0) + ("0" & ent1)) when sel_op = "00" else  -- Sum operation
+              (("0" & ent0) - ("0" & ent1)) when sel_op = "01" else  -- Subtraction operation
+              "00000000000000000"
 
+    output <= result(15 down to 0);
+    
+    carry <= result(16);
 
-    if(output = "0000000000000000")
-      zero <= '0';
-    else if zero <= '1';
+    zero <= '1' when result(15 down to 0) = (others => '0') else '0';
 
-    if(output(15) = "1")
-      isNegative = '1';
-    else if isNegative = '0';
+    isNegative < = output(15);
+
   end architecture;
 
     
