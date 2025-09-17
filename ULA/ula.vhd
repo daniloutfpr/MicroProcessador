@@ -37,6 +37,6 @@ architecture a_ULA of ULA is
     if(output(15) = "1")
       isNegative = '1';
     else if isNegative = '0';
-
+  end architecture;
 
     
