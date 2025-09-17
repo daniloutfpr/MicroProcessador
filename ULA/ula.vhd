@@ -1,11 +1,3 @@
---Especificaçoes ULA
---duas entradas de dados de 16 bits;
---•uma saída de resultado de 16 bits;
---•duas ou mais saídas de sinalização de um bit (são as flags, representam o status da
---operação;   consulte   a   tabela   de   branches   condicionais   sorteados   para   você   e
---implemente as flags indicadas na tabela, descritas no PDF do sorteio no Moodle);
---•entradas para seleção da operação
-
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
