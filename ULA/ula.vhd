@@ -26,8 +26,8 @@ entity ALU is
 
 architecture a_ALU of ALU is
   begin
-    output <= (ent0 + ent1) when set_op = "00" else  -- Sum operation
-              (ent0 - ent1) when set_op = "01" else  -- Subtraction operation
+    output <= (ent0 + ent1) when sel_op = "00" else  -- Sum operation
+              (ent0 - ent1) when sel_op = "01" else  -- Subtraction operation
 
 
     if(output = "0000000000000000")
