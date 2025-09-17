@@ -14,7 +14,7 @@ architecture a_ALU_tb of ALU_tb is
             ent1 : in unsigned(15 downto 0);     -- Second 16 bits input
             sel_op : in unsigned(1 downto 0);    -- 4x (different operations)
 
-            output : out unsigned (15 downto 0); -- 16 bits output for the ALU
+            alu_out: out unsigned (15 downto 0); -- 16 bits output for the ALU
             --operation flags
             carry : out std_logic;
             zero : out std_logic;
@@ -26,7 +26,7 @@ architecture a_ALU_tb of ALU_tb is
     signal s_ent1 : unsigned(15 downto 0);
     signal s_sel_op : unsigned(1 downto 0);
 
-    signal s_output : unsigned(15 downto 0);
+    signal s_alu_out : unsigned(15 downto 0);
     signal s_carry      : std_logic;
     signal s_zero       : std_logic;
     signal s_isNegative : std_logic;
@@ -38,7 +38,7 @@ architecture a_ALU_tb of ALU_tb is
             ent0 => s_ent0,
             ent1 => s_ent1,
             sel_op => s_sel_op,
-            output => s_output,
+            alu_out => s_alu_out,
             carry => s_carry,
             zero => s_zero, 
             isNegative => s_isNegative

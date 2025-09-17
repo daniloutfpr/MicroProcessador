@@ -1,4 +1,0 @@
-v 4
-file . "ula_tb.vhd" "95bffd152743ffc614e41e1201b4e23c2a6bd3f3" "20250917215740.525":
-  entity alu_tb at 3( 19) + 0 on 13;
-  architecture a_alu_tb of alu_tb at 10( 127) + 0 on 14;
