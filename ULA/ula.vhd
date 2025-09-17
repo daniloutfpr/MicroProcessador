@@ -12,7 +12,6 @@ use ieee.numeric_std.all;
 
 entity ALU is 
     port (
-        clk : in std_logic;
         ent0 : in unsigned(15 downto 0);     -- First 16 bits input
         ent1 : in unsigned(15 downto 0);     -- Second 16 bits input
         sel_op : in unsigned(1 downto 0);    -- 4x (different operations)
