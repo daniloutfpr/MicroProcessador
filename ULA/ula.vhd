@@ -13,11 +13,30 @@ use ieee.numeric_std.all;
 entity ULA is 
     port (
         clk : in std_logic;
-        ent1 : in unsigned(15 downto 0); --2 entradas de 16 bits na ula
-        ent2: in unsigned(15 downto 0);
-        sel_op : in unsigned(1 downto 0);--4(operaçoes)
-        saida: out unsigned (15 downto 0);-- saida de 16 bits na ula
-        --flags dos carrys in/out (falta)
+        ent0 : in unsigned(15 downto 0);     -- First 16 bits input
+        ent1 : in unsigned(15 downto 0);     -- Second 16 bits input
+        sel_op : in unsigned(1 downto 0);    -- 4x (different operations)
+        output : out unsigned (15 downto 0); -- 16 bits output for the ALU
+        --operation flags
+        carry : out std_logic;
+        overflow : out std_logic;
+        zero : out std_logic;
+        isNegative : out std_logic
     )
 
-architecture a_ULA of ULA isl
+architecture a_ULA of ULA is
+  begin
+    output <= (ent0 + ent1) when set_op = "00" else  -- Sum operation
+              (ent0 - ent1) when set_op = "01" else  -- Subtraction operation
+
+
+    if(output = "0000000000000000")
+      zero <= '0';
+    else if zero <= '1';
+
+    if(output(15) = "1")
+      isNegative = '1';
+    else if isNegative = '0';
+
+
+    
