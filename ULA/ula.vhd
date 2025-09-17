@@ -25,12 +25,14 @@ entity ALU is
     )
 
 architecture a_ALU of ALU is
-  
+
   signal result: unsigned (16 down to 0);
 
   begin
     result <= (("0" & ent0) + ("0" & ent1)) when sel_op = "00" else  -- Sum operation
               (("0" & ent0) - ("0" & ent1)) when sel_op = "01" else  -- Subtraction operation
+              (("0" & ent0) and ("0" & ent1)) when sel_op = "10" else  -- Comparsion operation (each bit)
+              (("0" & ent0) or ("0" & ent1)) when sel_op = "11" else  -- Active bit checking (Or operation)
               "00000000000000000"
 
     output <= result(15 down to 0);
