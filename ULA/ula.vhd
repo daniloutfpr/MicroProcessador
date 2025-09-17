@@ -19,7 +19,6 @@ entity ALU is
         output : out unsigned (15 downto 0); -- 16 bits output for the ALU
         --operation flags
         carry : out std_logic;
-        overflow : out std_logic;
         zero : out std_logic;
         isNegative : out std_logic
     )
