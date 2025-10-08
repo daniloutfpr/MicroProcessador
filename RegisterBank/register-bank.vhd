@@ -8,10 +8,12 @@ entity RegisterBank is
   port(
     clock: in std_logic;
     reset: in std_logic;
-    wr_en: in std_logic_vector(8 downto 0); -- write enable for each register
+    wr_en: in std_logic;
     data_in: in unsigned(7 downto 0);
-    reg_sel: in unsigned(3 downto 0); -- register select for reading
-    data_out: out unsigned(7 downto 0)
+    reg_sel_a: in unsigned(3 downto 0); -- register a selection
+    reg_sel_b: in unsigned(3 downto 0); -- register b selection
+    data_out_a: out unsigned(7 downto 0)
+    data_out_b: out unsigned(7 downto 0)
   );
   end entity;
 
@@ -28,7 +30,7 @@ architecture a_register_bank of RegisterBank is
   end component;
 
  -- Internal signals for register outputs
-  type reg_array is array (0 to 8) of unsigned(8 downto 0);
+  type reg_array is array (0 to 8) of unsigned(7 downto 0);
   signal reg_outputs: reg_array;
 
   -- Instantiate 9 registers
@@ -43,7 +45,10 @@ architecture a_register_bank of RegisterBank is
       );
   end generate;
   
-  -- Multiplexer to select output
-  data_out <= reg_outputs(to_integer(reg_sel)) when to_integer(reg_sel) < 9 else (others => '0');
+  -- Multiplexers to select outputs
+  data_out_a <= reg_outputs(to_integer(reg_sel_a)) when to_integer(reg_sel_a) < 9 else (others => '0');
+
+  data_out_b <= reg_outputs(to_integer(reg_sel_b)) when to_integer(reg_sel_b) < 9 else (others => '0');
+
   
 end architecture;
