@@ -9,18 +9,18 @@ entity Register is
     clock: in std_logic;
     reset: in std_logic;
     wr_en: in std_logic;
-    data_in: in unsigned(7 downto 0);
-    data_out: out unsigned(7 downto 0)
+    data_in: in unsigned(15 downto 0);
+    data_out: out unsigned(15 downto 0)
   );
   end entity;
 
 architecture a_register of Register is
-  signal register: unsigned(8 downto 0);
+  signal register: unsigned(15 downto 0);
 begin
   process(clock, reset)
   begin
     if reset='1' then
-      register <= "00000000";
+      register <= (others => '0');
     elsif rising_edge(clock) then
       if wr_en='1' then
         register <= data_in;
