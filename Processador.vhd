@@ -5,95 +5,88 @@ use ieee.numeric_std.all;
 -- Entidade do processador completo
 entity processor is
     port (
-        clock         : in std_logic;
-        reset         : in std_logic
+        clock           : in std_logic;
+        reset           : in std_logic;
+        -- Add control inputs for testing
+        reg_sel_a       : in unsigned(3 downto 0);
+        reg_sel_b       : in unsigned(3 downto 0);
+        wr_en           : in std_logic;
+        sel_op          : in unsigned(1 downto 0);
+        sel_constante   : in std_logic;
+        data_in         : in unsigned(15 downto 0);
+        -- Add outputs for observation
+        alu_result      : out unsigned(15 downto 0);
+        carry_out       : out std_logic;
+        zero_out        : out std_logic;
+        negative_out    : out std_logic
     );
 end entity processor;
 
-
 architecture a_processor of processor is
-    
     
     component RegisterBank is
         port (
-             clock: in std_logic;
+            clock: in std_logic;
             reset: in std_logic;
             wr_en: in std_logic;
             data_in: in unsigned(15 downto 0);
-            reg_sel_a: in unsigned(3 downto 0); -- register a selection
-            reg_sel_b: in unsigned(3 downto 0); -- register b selection 
+            reg_sel_a: in unsigned(3 downto 0);
+            reg_sel_b: in unsigned(3 downto 0);
             data_out_a: out unsigned(15 downto 0);
             data_out_b: out unsigned(15 downto 0)
         );
     end component;
 
-    
     component ALU is
         port (
-            ent0 : in unsigned(15 downto 0);     -- First 16 bits input
-            ent1 : in unsigned(15 downto 0);     -- Second 16 bits input
-            sel_op : in unsigned(1 downto 0);    -- 4x (different operations)
-
-            alu_out : out unsigned (15 downto 0); -- 16 bits output for the ALU
-            --operation flags
+            ent0 : in unsigned(15 downto 0);
+            ent1 : in unsigned(15 downto 0);
+            sel_op : in unsigned(1 downto 0);
+            alu_out : out unsigned (15 downto 0);
             carry : out std_logic;
             zero : out std_logic;
             isNegative : out std_logic
         );
     end component;
 
-    
-    
+    -- Internal signals
     signal s_out_reg_a : unsigned(15 downto 0);
     signal s_out_reg_b : unsigned(15 downto 0);
     signal s_result_out_ula : unsigned(15 downto 0);
     signal s_ent_b_ula : unsigned(15 downto 0);
 
-    signal s_reg_sel_a : unsigned(3 downto 0) := (others => '0');
-    signal s_reg_sel_b : unsigned(3 downto 0) := (others => '0');
-    signal s_wr_en : std_logic := '0';
-    signal s_sel_op : unsigned(1 downto 0) := (others => '0');
-    signal s_sel_constante : std_logic := '0';
-    constant c_constante_externa : unsigned(15 downto 0) := (others => '0');
-
-    signal s_carry : std_logic;
-    signal s_zero : std_logic;
-    signal s_isNegative : std_logic;
-
-    
-
-
 begin
-        --
-    RegisterBank_1: component RegisterBank
+    
+    -- Register Bank instantiation
+    RegisterBank_1: RegisterBank
         port map (
-           
             clock      => clock,
             reset      => reset,
-            data_out_a => s_out_reg_a,  
-            data_out_b => s_out_reg_b,  
-            data_in    => s_result_out_ula, 
-            
-            reg_sel_a  => s_reg_sel_a,
-            reg_sel_b  => s_reg_sel_b,
-            wr_en      => s_wr_en
+            wr_en      => wr_en,
+            data_in    => data_in,
+            reg_sel_a  => reg_sel_a,
+            reg_sel_b  => reg_sel_b,
+            data_out_a => s_out_reg_a,
+            data_out_b => s_out_reg_b
         );
 
-  
-    ALU_1: component ALU
+    -- ALU instantiation
+    ALU_1: ALU
         port map (
-             ent0        => s_out_reg_a,    
-            ent1        => s_ent_b_ula, 
-            
-            alu_out     => s_result_out_ula, 
-        
-            sel_op      => s_sel_op,        
-            carry       => s_carry,
-            zero        => s_zero,
-            isNegative  => s_isNegative
+            ent0       => s_out_reg_a,
+            ent1       => s_ent_b_ula,
+            sel_op     => sel_op,
+            alu_out    => s_result_out_ula,
+            carry      => carry_out,
+            zero       => zero_out,
+            isNegative => negative_out
         );
-        --
-        s_ent_b_ula <= s_out_reg_b when s_sel_constante = '0' else
-                   c_constante_externa;
+
+    -- Multiplexer for constant or register input to ALU
+    s_ent_b_ula <= s_out_reg_b when sel_constante = '0' else
+                   data_in;
+
+    -- Connect ALU result to output
+    alu_result <= s_result_out_ula;
 
 end architecture a_processor;
