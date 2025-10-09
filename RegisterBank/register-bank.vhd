@@ -36,20 +36,12 @@ architecture a_register_bank of RegisterBank is
 
 begin
 
-  -- Generate write enable signals for each register
-  process(wr_en, reg_sel_a, reg_sel_b)
+  -- Combinational write-enable decoder
+  process(wr_en, reg_sel_a)
   begin
-    -- Initialize all to '0'
     wr_en_array <= (others => '0');
-    
-    -- Enable write for selected registers
-    if wr_en = '1' then
-      if to_integer(reg_sel_a) >= 0 and to_integer(reg_sel_a) <= 8 then
-        wr_en_array(to_integer(reg_sel_a)) <= '1';
-      end if;
-      if to_integer(reg_sel_b) >= 0 and to_integer(reg_sel_b) <= 8 then
-        wr_en_array(to_integer(reg_sel_b)) <= '1';
-      end if;
+    if wr_en = '1' and to_integer(reg_sel_a) <= 8 then
+      wr_en_array(to_integer(reg_sel_a)) <= '1';
     end if;
   end process;
 
