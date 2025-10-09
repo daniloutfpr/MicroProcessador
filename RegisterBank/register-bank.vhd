@@ -12,7 +12,7 @@ entity RegisterBank is
     data_in: in unsigned(15 downto 0);
     reg_sel_a: in unsigned(3 downto 0); -- register a selection
     reg_sel_b: in unsigned(3 downto 0); -- register b selection
-    data_out_a: out unsigned(15 downto 0)
+    data_out_a: out unsigned(15 downto 0);
     data_out_b: out unsigned(15 downto 0)
   );
   end entity;
@@ -24,8 +24,8 @@ architecture a_register_bank of RegisterBank is
       clock: in std_logic;
       reset: in std_logic;
       wr_en: in std_logic;
-      data_in: in unsigned(7 downto 0);
-      data_out: out unsigned(7 downto 0)
+      data_in: in unsigned(15 downto 0);
+      data_out: out unsigned(15 downto 0)
     );
   end component;
 
@@ -33,13 +33,15 @@ architecture a_register_bank of RegisterBank is
   type reg_array is array (0 to 8) of unsigned(15 downto 0);
   signal reg_outputs: reg_array;
 
+begin
+  
   -- Instantiate 9 registers
   gen_registers: for i in 0 to 8 generate
     reg_inst: Register
       port map(
         clock => clock,
         reset => reset,
-        wr_en => wr_en(i),
+        wr_en => wr_en,
         data_in => data_in,
         data_out => reg_outputs(i)
       );
