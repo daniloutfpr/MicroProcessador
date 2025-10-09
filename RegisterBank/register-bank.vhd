@@ -15,11 +15,11 @@ entity RegisterBank is
     data_out_a: out unsigned(15 downto 0);
     data_out_b: out unsigned(15 downto 0)
   );
-  end entity;
+end entity;
 
 architecture a_register_bank of RegisterBank is
   -- Component declaration
-  component Register is
+  component Register16bit is
     port(
       clock: in std_logic;
       reset: in std_logic;
@@ -29,19 +29,37 @@ architecture a_register_bank of RegisterBank is
     );
   end component;
 
- -- Internal signals for register outputs
+  -- Internal signals for register outputs
   type reg_array is array (0 to 8) of unsigned(15 downto 0);
   signal reg_outputs: reg_array;
+  signal wr_en_array: std_logic_vector(0 to 8);
 
 begin
-  
+
+  -- Generate write enable signals for each register
+  process(wr_en, reg_sel_a, reg_sel_b)
+  begin
+    -- Initialize all to '0'
+    wr_en_array <= (others => '0');
+    
+    -- Enable write for selected registers
+    if wr_en = '1' then
+      if to_integer(reg_sel_a) >= 0 and to_integer(reg_sel_a) <= 8 then
+        wr_en_array(to_integer(reg_sel_a)) <= '1';
+      end if;
+      if to_integer(reg_sel_b) >= 0 and to_integer(reg_sel_b) <= 8 then
+        wr_en_array(to_integer(reg_sel_b)) <= '1';
+      end if;
+    end if;
+  end process;
+
   -- Instantiate 9 registers
   gen_registers: for i in 0 to 8 generate
-    reg_inst: Register
+    reg_inst: Register16bit
       port map(
         clock => clock,
         reset => reset,
-        wr_en => wr_en,
+        wr_en => wr_en_array(i),
         data_in => data_in,
         data_out => reg_outputs(i)
       );
@@ -52,5 +70,4 @@ begin
 
   data_out_b <= reg_outputs(to_integer(reg_sel_b)) when to_integer(reg_sel_b) < 9 else (others => '0');
 
-  
 end architecture;
