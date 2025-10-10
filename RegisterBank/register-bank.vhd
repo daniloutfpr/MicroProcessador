@@ -12,6 +12,7 @@ entity RegisterBank is
     data_in: in unsigned(15 downto 0);
     reg_sel_a: in unsigned(3 downto 0); -- register a selection
     reg_sel_b: in unsigned(3 downto 0); -- register b selection
+    wr_addr: in unsigned(3 downto 0); --register wr
     data_out_a: out unsigned(15 downto 0);
     data_out_b: out unsigned(15 downto 0)
   );
@@ -37,11 +38,11 @@ architecture a_register_bank of RegisterBank is
 begin
 
   -- Combinational write-enable decoder
-  process(wr_en, reg_sel_a)
+  process(wr_en, wr_addr)
   begin
     wr_en_array <= (others => '0');
-    if wr_en = '1' and to_integer(reg_sel_a) <= 8 then
-      wr_en_array(to_integer(reg_sel_a)) <= '1';
+    if wr_en = '1' and to_integer(wr_addr) <= 8 then
+      wr_en_array(to_integer(wr_addr)) <= '1';
     end if;
   end process;
 
