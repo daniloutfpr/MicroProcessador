@@ -33,7 +33,6 @@ architecture a_register_bank_tb of register_bank_tb is
     signal s_data_out_b : unsigned(15 downto 0);
 
     constant clock_period : time := 20 ns;
-    signal finished : std_logic := '0';  -- Add this signal
 
 begin
 
@@ -52,49 +51,47 @@ begin
         );
 
     -- Clock - stops when finished
-    s_clock <= not s_clock after clock_period / 2 when finished /= '1' else '0';
+    s_clock <= not s_clock after clock_period / 2;
 
    
     stim_proc: process
     begin
         
+        --Resets all the registers (cleaning)
         s_reset <= '1';
-        wait for 30 ns;
+        wait for 35 ns;
         s_reset <= '0';
-        wait for clock_period;
+        wait for 5 ns;
 
-        
+        -- Writes "0xAAAA" to R5
         s_wr_en   <= '1';
         s_wr_addr <= "0101"; 
         s_data_in <= x"AAAA";
         wait for clock_period;
 
-        
+        -- Writes "0xBBBB" to R6        
         s_wr_addr <= "0110"; 
         s_data_in <= x"BBBB";
         wait for clock_period;
 
-        
+        -- Disables writing (it won't write 0x0000 to R6)
         s_wr_en <= '0';
         s_data_in <= x"0000"; 
         wait for 5 ns; 
 
-        
+        -- Outputs R5 and R6 (for reading)
         s_reg_sel_a <= "0101";
         s_reg_sel_b <= "0110"; 
         wait for clock_period;
 
-        
-        s_reg_sel_a <= "0101"; 
-        s_reg_sel_b <= "0110"; 
+        -- Writes "0xCCCC" to R7
         s_wr_en   <= '1';
         s_wr_addr <= "0111";
         s_data_in <= x"CCCC";
         wait for clock_period;
 
-        
+        -- Disables writing
         s_wr_en <= '0';
-        finished <= '1';  -- Add this line
         wait;
     end process;
 

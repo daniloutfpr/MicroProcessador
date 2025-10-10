@@ -29,15 +29,15 @@ architecture a_processor_tb of processor_tb is
     
     signal s_clock          : std_logic := '0';
     signal s_reset          : std_logic := '1';
-    signal s_reg_sel_a      : unsigned(3 downto 0) := (others => '0');
-    signal s_reg_sel_b      : unsigned(3 downto 0) := (others => '0');
+    signal s_reg_sel_a      : unsigned(3 downto 0) := "1111";
+    signal s_reg_sel_b      : unsigned(3 downto 0) := "1111";
     signal s_wr_addr        : unsigned(3 downto 0) := (others => '0'); 
     signal s_wr_en          : std_logic := '0';
     signal s_sel_write_data : std_logic := '0';                         
     signal s_sel_op         : unsigned(1 downto 0) := (others => '0');
     signal s_sel_constante  : std_logic := '0';
     signal s_data_in        : unsigned(15 downto 0) := (others => '0');
-    signal s_alu_result     : unsigned(15 downto 0);
+    signal s_alu_result     : unsigned(15 downto 0) := (others => '0');
     signal s_carry_out      : std_logic;
     signal s_zero_out       : std_logic;
     signal s_negative_out   : std_logic;
@@ -76,53 +76,44 @@ begin
         s_reset <= '0';
         wait for 20 ns;
 
-        -- Teste: R0 <= 10
+        -- Test: R0 <= 10
         s_wr_en          <= '1';
         s_sel_write_data <= '1'; -- "data_in"
         s_wr_addr        <= "0000"; --R0
         s_data_in        <= x"000A"; --10
         wait for clock_period;
 
-        -- Teste: R1 <= 5
+        -- Test: R1 <= 5
         s_wr_addr <= "0001"; -- R1
         s_data_in <= x"0005"; -- 5
         wait for clock_period;
-        
-        
-        s_wr_en <= '0';
-        s_sel_write_data <= '0'; -- (ULA)
-        wait for clock_period;
 
-        -- Teste: R2 <= R0 + R1
-        s_reg_sel_a      <= "0000"; -- ULA ent0 = R0 (10)
-        s_reg_sel_b      <= "0001"; -- ULA ent1 = R1 (5)
-        s_sel_op         <= "00";   -- Op = SUM
-        s_sel_constante  <= '0';
-        
-        
+
+        -- Test: R2 <= R0 + R1
         s_wr_en          <= '1';             -- write enable
         s_sel_write_data <= '0';             -- ALU result
         s_wr_addr        <= "0010";          -- R2
+        s_reg_sel_a      <= "0000";          -- ALU input = R0 (10)
+        s_reg_sel_b      <= "0001";          -- ALU input = R1 (5)
+        s_sel_op         <= "00";            -- Op = SUM
+        s_sel_constante  <= '0';
 
-        --  ALU (15)  R2 , next rising_edge(clock)
+        -- ALU (15) R2
         wait for clock_period;
-        
+
+        -- Disable write
         s_wr_en <= '0';
-        s_sel_write_data <= '0'; -- (ULA)
-        wait for clock_period;
 
-        -- Teste: R3 <= R2 - R1
-        s_reg_sel_a      <= "0010"; -- ULA ent0 = R2 (15)
-        s_reg_sel_b      <= "0001"; -- ULA ent1 = R1 (5)
+        -- Test: R3 <= R2 - R1
+        s_reg_sel_a      <= "0010"; -- ALU input = R2 (15)
+        s_reg_sel_b      <= "0001"; -- ALU input = R1 (5)
         s_sel_op         <= "01";   -- Op = SUB
         s_sel_constante  <= '0';
-        
-        
-        s_wr_en          <= '1';             -- write enable
-        s_sel_write_data <= '0';             -- ALU result
+        s_wr_en          <= '1';
+        s_sel_write_data <= '0';
         s_wr_addr        <= "0011";          -- R3
 
-        --  ALU (10)  R2 , next rising_edge(clock)
+        -- ALU (10) R3
         wait for clock_period;
 
         -- test end
