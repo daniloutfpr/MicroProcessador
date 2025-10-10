@@ -2,6 +2,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
+
 -- Entidade do processador completo
 entity processor is
     port (
@@ -14,6 +15,7 @@ entity processor is
         wr_en           : in std_logic;
         sel_op          : in unsigned(1 downto 0);
         sel_constante   : in std_logic;
+        sel_write_data  : in std_logic;
         data_in         : in unsigned(15 downto 0);
         -- Add outputs for observation
         alu_result      : out unsigned(15 downto 0);
@@ -95,6 +97,6 @@ begin
 
     -- Connect ALU result to output
     alu_result <= s_result_out_ula;
-    data
+ 
 
 end architecture a_processor;

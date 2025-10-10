@@ -17,16 +17,15 @@ entity Register16bit is
 architecture a_register of Register16bit is
   signal s_register: unsigned(15 downto 0);
 begin
-  process(clock, reset)
-  begin
-    if reset='1' then
+  process(clock)
+begin
+  if rising_edge(clock) then
+    if reset = '1' then
       s_register <= (others => '0');
-    elsif rising_edge(clock) then
-      if wr_en='1' then
-        s_register <= data_in;
-      end if;
+    elsif wr_en = '1' then
+      s_register <= data_in;
     end if;
-  end process;
-
-  data_out <= s_register;
+  end if;
+end process;
+data_out <= s_registe
 end architecture;
