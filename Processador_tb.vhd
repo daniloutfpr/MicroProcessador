@@ -106,6 +106,24 @@ begin
 
         --  ALU (15)  R2 , next rising_edge(clock)
         wait for clock_period;
+        
+        s_wr_en <= '0';
+        s_sel_write_data <= '0'; -- (ULA)
+        wait for clock_period;
+
+        -- Teste: R3 <= R2 - R1
+        s_reg_sel_a      <= "0010"; -- ULA ent0 = R2 (15)
+        s_reg_sel_b      <= "0001"; -- ULA ent1 = R1 (5)
+        s_sel_op         <= "01";   -- Op = SUB
+        s_sel_constante  <= '0';
+        
+        
+        s_wr_en          <= '1';             -- write enable
+        s_sel_write_data <= '0';             -- ALU result
+        s_wr_addr        <= "0011";          -- R3
+
+        --  ALU (10)  R2 , next rising_edge(clock)
+        wait for clock_period;
 
         -- test end
         s_wr_en <= '0';

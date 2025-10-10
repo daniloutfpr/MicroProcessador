@@ -23,16 +23,17 @@ architecture a_register_bank_tb of register_bank_tb is
 
 
     signal s_clock      : std_logic := '0';
-    signal s_reset      : std_logic;
-    signal s_wr_en      : std_logic;
-    signal s_data_in    : unsigned(15 downto 0);
-    signal s_reg_sel_a  : unsigned(3 downto 0);
-    signal s_reg_sel_b  : unsigned(3 downto 0);
-    signal s_wr_addr    : unsigned(3 downto 0);
+    signal s_reset      : std_logic := '0';
+    signal s_wr_en      : std_logic := '0';
+    signal s_data_in    : unsigned(15 downto 0) := (others => '0');
+    signal s_reg_sel_a  : unsigned(3 downto 0) := (others => '0');
+    signal s_reg_sel_b  : unsigned(3 downto 0) := (others => '0');
+    signal s_wr_addr    : unsigned(3 downto 0) := (others => '0');
     signal s_data_out_a : unsigned(15 downto 0);
     signal s_data_out_b : unsigned(15 downto 0);
 
     constant clock_period : time := 20 ns;
+    signal finished : std_logic := '0';  -- Add this signal
 
 begin
 
@@ -50,8 +51,8 @@ begin
             data_out_b => s_data_out_b
         );
 
-    -- Clock
-    s_clock <= not s_clock after clock_period / 2;
+    -- Clock - stops when finished
+    s_clock <= not s_clock after clock_period / 2 when finished /= '1' else '0';
 
    
     stim_proc: process
@@ -93,6 +94,7 @@ begin
 
         
         s_wr_en <= '0';
+        finished <= '1';  -- Add this line
         wait;
     end process;
 
