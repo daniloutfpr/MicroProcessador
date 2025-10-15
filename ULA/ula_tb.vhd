@@ -76,14 +76,14 @@ architecture a_ALU_tb of ALU_tb is
             wait for 50 ns;
             --and 
             s_sel_op <= "10";
-            s_ent0 <= x"0F0F";--binario "0000111100001111"
-            s_ent1 <= x"FFFF";--binario "1111111111111111"
+            s_ent0 <= x"0F0F";--binary "0000111100001111"
+            s_ent1 <= x"FFFF";--binary "1111111111111111"
 
             wait for 50 ns;
             --or
             s_sel_op <= "11";
             s_ent0 <= x"0F0F";
-            s_ent1 <= x"F0F0"; --binario "1111000011110000"
+            s_ent1 <= x"F0F0"; --binary "1111000011110000"
 
             wait for 50 ns;
 
