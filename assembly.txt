@@ -1,0 +1,14 @@
+A. Carrega R3 (o registrador 3) com o valor 5
+B. Carrega R4 com 8
+C. Soma R3 com R4 e guarda em R5
+D. Subtrai 1 de R5
+E. Salta para o endereço 20
+F. Zera R5 (nunca será executada)
+G. No endereço 20, copia R5 para R3
+H. Salta para o passo C desta lista (R5 <= R3+R4)
+I. Zera R3 (nunca será executada)
+
+A.LI R3,5
+B.LI R4,8
+C.ADD R3,R4,R5
+D.ADDI R5,R5,-1

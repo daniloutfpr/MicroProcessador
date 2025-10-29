@@ -95,7 +95,8 @@ begin
 
     -- Control logic
     jump_en <= '1' when opcode = "1111" else '0';
-    pc_wr_en <= '1'; -- Always enable PC write (it will be controlled by clock)
+    --state = 0 fetch , state =1 decode/execute(pc_write ON)
+    pc_wr_en <= state_s;
 
     -- Next PC calculation (jump or increment)
     pc_next <= current_instr when (jump_en = '1' and state_s = '1') else pc_incremented;
