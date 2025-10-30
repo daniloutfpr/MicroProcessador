@@ -22,10 +22,10 @@ entity UC is
         pc_sel  : out std_logic;
         mux_alu: out std_logic; --register b or ctc
         mux_rb : out std_logic;-- alu out or data in
-        alu_op : out std_logic;
+        alu_op : out unsigned(1 downto 0)
         
     );
-end entity;
+end entity; 
 
 architecture a_UC of UC is 
     signal state_s: unsigned(1 downto 0);
@@ -34,7 +34,7 @@ architecture a_UC of UC is
         port(
             clock: in std_logic;
             reset: in std_logic;
-            state: out std_logic
+            state: unsigned(1 downto 0)
         );
     end component;
   
@@ -44,21 +44,23 @@ begin
             port map(
                 clock => clock,
                 reset => reset,
-                state => s_state
-            )
+                state => state_s
+            );
 
-    ri_wr_en <= '1' when (estado_s = "01") else
+    ri_wr_en <= '1' when (state_s = "01") else
                 '0';
 
-    jump <= '1' when (opcode = 1111) or -- opcode jump 1111
+    jump <= '1' when (opcode ="1111")  -- opcode jump 1111
                      else '0'; 
                      
-    pc_wr_en <= '1' when (estado_s = "01") or 
-                (estado_s = "10" and  jump = '1')
+    pc_wr_en <= '1' when (state_s = "01") or 
+                (state_s = "10" and  jump = '1')
                 else '0';
 
-    pc_sel <= '1' when (estado_s = "10" and jump= '1')
+    pc_sel <= '1' when (state_s = "10" and jump= '1')
               else '0';
+
+
 
     
 
