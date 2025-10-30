@@ -8,20 +8,6 @@ entity processor is
     port (
         clock           : in std_logic;
         reset           : in std_logic;
-        -- Add control inputs for testing
-        reg_sel_a       : in unsigned(3 downto 0);
-        reg_sel_b       : in unsigned(3 downto 0);
-        wr_addr         : in unsigned(3 downto 0);
-        wr_en           : in std_logic;
-        sel_op          : in unsigned(1 downto 0);
-        sel_constante   : in std_logic;
-        sel_write_data  : in std_logic;
-        data_in         : in unsigned(15 downto 0);
-        -- Add outputs for observation
-        alu_result      : out unsigned(15 downto 0);
-        carry_out       : out std_logic;
-        zero_out        : out std_logic;
-        negative_out    : out std_logic
     );
 end entity processor;
 
@@ -50,6 +36,33 @@ architecture a_processor of processor is
             carry : out std_logic;
             zero : out std_logic;
             isNegative : out std_logic
+        );
+    end component;
+
+
+    component PCCounterTop is 
+        port(
+            clock: in std_logic;
+            reset: in std_logic;
+            wr_en: in std_logic;
+            pc_out: out unsigned(14 downto 0)
+        );
+    end component;
+
+    component rom is
+        port(
+            clk: in std_logic;
+            adrees: in unsigned(6 downto 0); 
+            data : out unsigned(14 downto 0)
+        );
+    end component;
+
+    component UC is 
+        port(
+            clock: in std_logic;
+            reset: in std_logic;
+            pc_out: out unsigned(6 downto 0);  -- PC address to ROM
+            instr_out: out unsigned(14 downto 0)  -- Current instruction
         );
     end component;
 

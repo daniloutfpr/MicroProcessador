@@ -1,0 +1,23 @@
+    ; ======================================================
+    ; codificacao.txt
+    ; ULA com instruções ortogonais: segue o modelo RISC da ULA,
+    com as operações possíveis para qualquer um dos registradores;
+    ; ======================================================
+
+    ; Formatos:
+    ; Formato
+
+    ; Instruções definidas:
+    0000 : NOP                     ; Nenhuma operação
+    0001 : ADD   Rd, Rm            ; Rd ← Rd + Rm
+    0010 : SUB   Rd, Rm            ; Rd ← Rd - Rm
+    0011 : ADDI  Rd, imm7          ; Rd ← Rd + imediato (7 bits)
+    0100 : JMP   addr7             ; PC ← addr7
+    0101 : CLR   Rd                ; (opcional, se quiser manter compatibilidade)
+    ; 0110–1111 reservadas
+
+    ; Exemplo de codificação:
+    ; ADDI R3,5 -> 0011_0011_0000101 = 0b001100110000101
+    ; ADD R5,R3 -> 0001_0101_0011000 = 0b000101010011000
+    ; SUB R5,R0 -> 0010_0101_0000000 = 0b001001010000000
+    ; JMP 20    -> 0100_0000_0101000 = 0b010000000101000

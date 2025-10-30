@@ -1,27 +1,35 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
-
+---- Control of Muxes , write enables , etc...
 entity UC is 
     port(
         clock: in std_logic;
         reset: in std_logic;
-        pc_out: out unsigned(6 downto 0);  -- PC address to ROM
-        instr_out: out unsigned(14 downto 0)  -- Current instruction
+        opcode: in unsigned (3 downto 0); --[14-11] instruction
+
+        -- Flags 
+        flag_N_in: in  std_logic; --Not used yet. -- negative
+        flag_Z_in: in  std_logic; --Flags out of alu results -- zero 
+        flag_C_in: in  std_logic; --Not used yet -- carry
+        
+        --Wr_en
+        pc_wr_en: out std_logic; -- Habilita escrita no PC
+        ri_wr_en: out std_logic; -- write on instruction register 
+        rb_wr_en: out std_logic; --write on RegisterBank
+        
+        --Mux
+        pc_sel  : out std_logic;
+        mux_alu: out std_logic; --register b or ctc
+        mux_rb : out std_logic;-- alu out or data in
+        alu_op : out std_logic;
+        
     );
 end entity;
 
 architecture a_UC of UC is 
-    signal opcode: unsigned(3 downto 0);
-    signal state_s: std_logic;
-    signal jump_en: std_logic;
-    signal pc_wr_en: std_logic;
-    signal current_instr: unsigned(14 downto 0);
-    signal pc_current: unsigned(14 downto 0);
-    signal pc_next: unsigned(14 downto 0);
-    signal pc_incremented: unsigned(14 downto 0);
-    signal rom_data: unsigned(14 downto 0);
-
+    signal state_s: unsigned(1 downto 0);
+    signal jump: std_logic;
     component fsm_state
         port(
             clock: in std_logic;
@@ -29,92 +37,30 @@ architecture a_UC of UC is
             state: out std_logic
         );
     end component;
-
-    component rom
-        port(
-            clk: in std_logic;
-            adrees: in unsigned(6 downto 0); 
-            data : out unsigned(14 downto 0)
-        );
-    end component;
-
-    component ProgramCounter
-        port(
-            clock: in std_logic;
-            reset: in std_logic;
-            wr_en: in std_logic;
-            instr_in: in unsigned(14 downto 0); 
-            instr_out: out unsigned(14 downto 0)
-        );
-    end component;
-
-    component SumEntity
-        port(
-            data_in: in unsigned(14 downto 0); 
-            data_out: out unsigned(14 downto 0)
-        );
-    end component;
-
+  
 begin 
 
-    -- State machine instance
-    inst_fsm: fsm_state
-        port map(
-            clock => clock,
-            reset => reset,
-            state => state_s
-        );
+    instance_fsm: fsm_state
+            port map(
+                clock => clock,
+                reset => reset,
+                state => s_state
+            )
 
-    -- Program Counter instance
-    inst_pc: ProgramCounter
-        port map(
-            clock => clock,
-            reset => reset,
-            wr_en => pc_wr_en,
-            instr_in => pc_next,
-            instr_out => pc_current
-        );
+    ri_wr_en <= '1' when (estado_s = "01") else
+                '0';
 
-    -- ROM instance
-    inst_rom: rom
-        port map(
-            clk => clock,
-            adrees => pc_current(6 downto 0),  -- Use lower 7 bits as address
-            data => rom_data
-        );
+    jump <= '1' when (opcode = 1111) or -- opcode jump 1111
+                     else '0'; 
+                     
+    pc_wr_en <= '1' when (estado_s = "01") or 
+                (estado_s = "10" and  jump = '1')
+                else '0';
 
-    -- Sum Entity instance for PC increment
-    inst_sum: SumEntity
-        port map(
-            data_in => pc_current,
-            data_out => pc_incremented
-        );
+    pc_sel <= '1' when (estado_s = "10" and jump= '1')
+              else '0';
 
-    -- Extract opcode from current instruction
-    opcode <= current_instr(14 downto 11);
+    
 
-    -- Control logic
-    jump_en <= '1' when opcode = "1111" else '0';
-    --state = 0 fetch , state =1 decode/execute(pc_write ON)
-    pc_wr_en <= state_s;
-
-    -- Next PC calculation (jump or increment)
-    pc_next <= current_instr when (jump_en = '1' and state_s = '1') else pc_incremented;
-
-    -- Instruction register logic (fetch on state 0)
-    process(clock, reset)
-    begin
-        if reset = '1' then
-            current_instr <= (others => '0');
-        elsif rising_edge(clock) then
-            if state_s = '0' then  -- Fetch state
-                current_instr <= rom_data;
-            end if;
-        end if;
-    end process;
-
-    -- Outputs
-    pc_out <= pc_current(6 downto 0);
-    instr_out <= current_instr;
 
 end architecture;
