@@ -6,8 +6,6 @@
 
 // --- Setup ---
 // 
-0:  CLR  R1        
-1:  ADDI R1, 1     
 
 // --- A. Carrega R3 com 5 ---
 
