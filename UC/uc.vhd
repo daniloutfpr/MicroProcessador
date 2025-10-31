@@ -50,7 +50,7 @@ begin
     ri_wr_en <= '1' when (state_s = "01") else
                 '0';
 
-    jump <= '1' when (opcode ="1111")  -- opcode jump 1111
+    jump <= '1' when (opcode ="0110")  -- opcode jump 0110
                      else '0'; 
                      
     pc_wr_en <= '1' when (state_s = "01") or 
@@ -60,9 +60,26 @@ begin
     pc_sel <= '1' when (state_s = "10" and jump= '1')
               else '0';
 
+    rb_wr_en <= '1' when (state_s = "10") and 
+                         (opcode = "0001" or  -- CLR
+                          opcode = "0010" or  -- MOV
+                          opcode = "0011" or  -- ADD
+                          opcode = "0100" or  -- SUB
+                          opcode = "0101")    -- ADDI
+                         else '0';
+
+    mux_alu <= '1' when (opcode = "0101") -- ADDI
+               else '0';
+               
+    mux_rb <= '0'; -- always select alu out
+
+    alu_op <= "00" when (opcode = "0011" or opcode = "0101") else -- ADD, ADDI
+              "01" when (opcode = "0100") else                   -- SUB
+              "10" when (opcode = "0010") else                   -- MOV (Passa B)
+              "11" when (opcode = "0001") else                   -- CLR (Gera 0)
+              "00";
 
 
-    
 
 
 end architecture;

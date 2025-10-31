@@ -1,35 +1,56 @@
-; ======================================================
-; assembly.txt
-; Processador com ULA ortogonal - 15 bits
-; 9 registradores: R0–R8
-; Instruções de 15 bits
-; ======================================================
+// assembly.txt
+// Processador de 15-bit, 9-reg, 2-operandos (Sorteio)
+// ----------------------------------------------------
+// Endereço | Instrução | Comentário
+// ----------------------------------------------------
 
-; A. Carrega R3 com 5
-0   ADDI R3, 5        ; R3 ← R3 + 5
+// --- Setup ---
+// 
+0:  CLR  R1        
+1:  ADDI R1, 1     
 
-; B. Carrega R4 com 8
-1   ADDI R4, 8        ; R4 ← R4 + 8
+// --- A. Carrega R3 com 5 ---
 
-; C. Soma R3 + R4 → R5
-2   ADD  R5, R3       ; R5 ← R5 + R3
-3   ADD  R5, R4       ; R5 ← R5 + R4
+2:  CLR  R3        
+3:  ADDI R3, 5     
 
-; D. Subtrai 1 de R5
-4   ADDI R0, 1        ; R0 ← R0 + 1
-5   SUB  R5, R0       ; R5 ← R5 - 1
+// --- B. Carrega R4 com 8 ---
+4:  CLR  R4        
+5:  ADDI R4, 8     
 
-; E. Salta para o endereço 20
-6   JMP  20
+// --- C. Soma R3 com R4 e guarda em R5 --- (PASSO_C)
 
-; F. Zera R5 (nunca executada)
-7   SUB  R5, R5       ; R5 ← R5 - R5 = 0
+6:  CLR  R5        
+7:  ADD  R5, R3    
+8:  ADD  R5, R4    
 
-; G. Endereço 20: copia R5 → R3
-20  ADD  R3, R5       ; R3 ← R3 + R5
+// --- D. Subtrai 1 de R5 ---
+// 
+9:  SUB  R5, R1    
 
-; H. Salta para o passo C (endereço 2)
-21  JMP  2
+// --- E. Salta para o endereço 20 ---
+10: JMP  20       
 
-; I. Zera R3 (nunca executada)
-22  SUB  R3, R3       ; R3 ← R3 - R3 = 0
+// --- F. Zera R5 (nunca será executada) ---
+11: CLR  R5
+
+// --- Preenchimento (NOPs) ---
+12: NOP        
+13: NOP        
+14: NOP        
+15: NOP
+16: NOP        
+17: NOP        
+18: NOP        
+19: NOP        
+
+// --- G. No endereço 20, copia R5 para R3 --- 
+20: MOV  R3, R5
+
+// --- H. Salta para o passo C (endereço 6) ---
+22: JMP  6         // PC <= 6
+
+// --- I. Zera R3 (nunca será executada) ---
+23: CLR  R3
+
+// --- Fim do programa ---
