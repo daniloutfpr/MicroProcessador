@@ -29,7 +29,7 @@ architecture a_UC of UC is
         port(
             clock: in std_logic;
             reset: in std_logic;
-            state: unsigned(1 downto 0)
+            state: out unsigned(1 downto 0)
         );
     end component;
   

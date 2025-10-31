@@ -7,7 +7,7 @@ use ieee.numeric_std.all;
 entity processor is
     port (
         clock           : in std_logic;
-        reset           : in std_logic;
+        reset           : in std_logic
     );
 end entity processor;
 
@@ -18,21 +18,21 @@ architecture a_processor of processor is
             clock: in std_logic;    
             reset: in std_logic;
             wr_en: in std_logic;
-            data_in: in unsigned(15 downto 0);
+            data_in: in unsigned(14 downto 0);
             reg_sel_a: in unsigned(3 downto 0);
             reg_sel_b: in unsigned(3 downto 0);
             wr_addr: in unsigned(3 downto 0);
-            data_out_a: out unsigned(15 downto 0);
-            data_out_b: out unsigned(15 downto 0)
+            data_out_a: out unsigned(14 downto 0);
+            data_out_b: out unsigned(14 downto 0)
         );
     end component;
 
     component ALU is
         port (
-            ent0 : in unsigned(15 downto 0);
-            ent1 : in unsigned(15 downto 0);
+            ent0 : in unsigned(14 downto 0);
+            ent1 : in unsigned(14 downto 0);
             sel_op : in unsigned(1 downto 0);
-            alu_out : out unsigned (15 downto 0);
+            alu_out : out unsigned (14 downto 0);
             carry : out std_logic;
             zero : out std_logic;
             isNegative : out std_logic
@@ -44,8 +44,8 @@ architecture a_processor of processor is
             clock : in std_logic;
             reset : in std_logic;
             wr_en: in std_logic;
-            data_in : unsigned(14 downto 0);
-            data_out : unsigned (14 downto 0);
+            data_in : in unsigned(14 downto 0);
+            data_out : out unsigned (14 downto 0)
         );
     end component;
 
@@ -91,6 +91,15 @@ architecture a_processor of processor is
     end component;
 
     -- Internal signals
+
+    signal s_pc_wr_en   : std_logic; 
+    signal s_ri_wr_en   : std_logic; 
+    signal s_rb_wr_en   : std_logic; 
+    signal s_pc_sel     : std_logic; 
+    signal s_mux_alu    : std_logic; 
+    signal s_mux_rb     : std_logic; 
+    signal s_alu_op     : unsigned(1 downto 0);
+
     signal s_pc_out     : unsigned(6 downto 0);  -- 7 bits (PC -> ROM)
     signal s_rom_data   : unsigned(14 downto 0); -- 15 bits (ROM -> RI)
     signal s_ri_out     : unsigned(14 downto 0); -- 15 bits (Saída "travada" do RI)
@@ -105,13 +114,11 @@ architecture a_processor of processor is
     signal s_rb_addr_a  : unsigned(3 downto 0);  -- 4 bits (RI -> RB)
     signal s_rb_addr_b  : unsigned(3 downto 0);  -- 4 bits (RI -> RB)
     signal s_rb_addr_w  : unsigned(3 downto 0);  -- 4 bits (RI -> RB)
-    signal s_ctc   : unsigned(14 downto 0); -- 15 bits (RI -> MUX ALU)
+    signal s_imm   : unsigned(14 downto 0); -- 15 bits (RI -> MUX ALU)
     signal s_jump_addr  : unsigned(6 downto 0);  -- 7 bits (RI -> PC)
 
 begin
-        --Mux_wr_regBank(out_alu or data_in)
-     s_reg_write_data <= s_result_out_ula when sel_write_data = '0' else
-                         data_in;
+      
 
     inst_RB: RegisterBank
         port map(
@@ -179,7 +186,7 @@ begin
             wr_en    => s_ri_wr_en,  -- UC (state "00")
             data_in  => s_rom_data, 
             data_out => s_ri_out     
-        )
+        );
 
     ----
     s_opcode_in <= s_ri_out(14 downto 11); 
@@ -190,19 +197,14 @@ begin
     s_jump_addr <= s_ri_out(6 downto 0);
 
 
-    s_ctc(14 downto 7) <= (others => s_ri_out(6)); -- Estende o bit 6
-    s_ctc(6 downto 0)  <= s_ri_out(6 downto 0);
+    s_imm(14 downto 7) <= (others => s_ri_out(6)); -- Estende o bit 6
+    s_imm(6 downto 0)  <= s_ri_out(6 downto 0);
 
     s_alu_in_b <= s_rb_out_b when s_mux_alu = '0' else
-                  s_imediato;
+                  s_imm;
 
     s_rb_data_in <= s_alu_out when s_mux_rb = '0' else
                     (others => '0');
-
-
-
-    -- Connect ALU result to output
-    alu_result <= s_alu_out;
  
 
 end architecture a_processor;

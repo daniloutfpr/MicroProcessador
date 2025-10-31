@@ -10,13 +10,13 @@ entity instr_reg is
     clock: in std_logic;
     reset: in std_logic;
     wr_en: in std_logic;
-    data_in: in unsigned(15 downto 0);
-    data_out: out unsigned(15 downto 0)
+    data_in: in unsigned(14 downto 0);
+    data_out: out unsigned(14 downto 0)
   );
   end entity;
 
 architecture a_instr_register of instr_reg is
-  signal s_register: unsigned(15 downto 0) := (others => '0'); -- Initialize to zero
+  signal s_register: unsigned(14 downto 0) := (others => '0'); -- Initialize to zero
 begin
   process(clock)  -- Executes in the clock variation
     begin
