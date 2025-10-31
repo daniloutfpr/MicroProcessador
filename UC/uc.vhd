@@ -6,12 +6,7 @@ entity UC is
     port(
         clock: in std_logic;
         reset: in std_logic;
-        opcode: in unsigned (3 downto 0); --[14-11] instruction
-
-        -- Flags 
-        flag_N_in: in  std_logic; --Not used yet. -- negative
-        flag_Z_in: in  std_logic; --Flags out of alu results -- zero 
-        flag_C_in: in  std_logic; --Not used yet -- carry
+        opcode: in unsigned (3 downto 0); --[14-11] instructionS
         
         --Wr_en
         pc_wr_en: out std_logic; -- Habilita escrita no PC
@@ -47,7 +42,7 @@ begin
                 state => state_s
             );
 
-    ri_wr_en <= '1' when (state_s = "01") else
+    ri_wr_en <= '1' when (state_s = "00") else
                 '0';
 
     jump <= '1' when (opcode ="0110")  -- opcode jump 0110

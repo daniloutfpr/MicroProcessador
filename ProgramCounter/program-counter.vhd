@@ -9,13 +9,13 @@ entity ProgramCounter is
     clock: in std_logic;
     reset: in std_logic;
     wr_en: in std_logic;
-    instr_in: in unsigned(14 downto 0); 
-    instr_out: out unsigned(14 downto 0)
+    instr_in: in unsigned(6 downto 0); 
+    instr_out: out unsigned(6 downto 0)
   );
 end entity;
 
 architecture a_ProgramCounter of ProgramCounter is
-  signal s_data: unsigned(14 downto 0);
+  signal s_data: unsigned(6 downto 0);
 
 begin
   process(clock)  -- Executes in the clock variation

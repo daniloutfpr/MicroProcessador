@@ -9,9 +9,9 @@ entity PCCounterTop is
     wr_en:        in  std_logic;
     
     pc_sel:       in  std_logic; -- Mux (Jump or Pc+1)
-    jump_addr_in: in  unsigned (14 downto 0);
+    jump_addr_in: in  unsigned (6 downto 0);
 
-    pc_out:       out unsigned (14 downto 0)
+    pc_out:       out unsigned (6 downto 0)
   );
 end entity;
 
@@ -21,21 +21,21 @@ architecture a_PCCounterTop of PCCounterTop is
       clock:     in  std_logic;
       reset:     in  std_logic;
       wr_en:     in  std_logic;
-      instr_in:  in  unsigned(14 downto 0); 
-      instr_out: out unsigned(14 downto 0)
+      instr_in:  in  unsigned(6 downto 0); 
+      instr_out: out unsigned(6 downto 0)
     );
   end component;
   
   component SumEntity is
     port(
-      data_in:   in  unsigned(14 downto 0); 
-      data_out:  out unsigned(14 downto 0)
+      data_in:   in  unsigned(6 downto 0); 
+      data_out:  out unsigned(6 downto 0)
     );
   end component;
   
-  signal s_pc_mux:  unsigned(14 downto 0); -- value of mux that goes to pc
-  signal s_pc_out:  unsigned(14 downto 0);
-  signal s_sum_out: unsigned(14 downto 0);
+  signal s_pc_mux:  unsigned(6 downto 0); -- value of mux that goes to pc
+  signal s_pc_out:  unsigned(6 downto 0);
+  signal s_sum_out: unsigned(6 downto 0);
   
 begin
   pc: ProgramCounter port map(

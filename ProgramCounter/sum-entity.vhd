@@ -4,8 +4,8 @@ use ieee.numeric_std.all;
 
 entity SumEntity is
   port(
-    data_in: in unsigned(14 downto 0); 
-    data_out: out unsigned(14 downto 0)
+    data_in: in unsigned(6 downto 0); 
+    data_out: out unsigned(6 downto 0)
   );
 end entity;
 
