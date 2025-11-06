@@ -5,7 +5,7 @@ use ieee.numeric_std.all;
 entity fsm_tb is 
 end entity;
 
-architecture sim of tb_fsm_estado is
+architecture sim of fsm_tb is
     signal clk    : std_logic := '0';
     signal reset  : std_logic := '1';
     signal state : std_logic;

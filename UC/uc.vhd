@@ -48,11 +48,10 @@ begin
     jump <= '1' when (opcode ="0110")  -- opcode jump 0110
                      else '0'; 
                      
-    pc_wr_en <= '1' when (state_s = "01") or 
-                (state_s = "10" and  jump = '1')
+    pc_wr_en <= '1' when (state_s = "01")
                 else '0';
 
-    pc_sel <= '1' when (state_s = "10" and jump= '1')
+    pc_sel <= '1' when (state_s = "01" and jump = '1')
               else '0';
 
     rb_wr_en <= '1' when (state_s = "10") and 
