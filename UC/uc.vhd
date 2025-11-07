@@ -8,8 +8,13 @@ entity UC is
         reset: in std_logic;
         opcode: in unsigned (3 downto 0); --[14-11] instructionS
         
+        --Flags (from PSW)
+        isNegative: in std_logic;
+        carry: in std_logic;
+        isZero: in std_logic;
+
         --Wr_en
-        pc_wr_en: out std_logic; -- Habilita escrita no PC
+        pc_wr_en: out std_logic; -- enables write on Program Counter
         ri_wr_en: out std_logic; -- write on instruction register 
         rb_wr_en: out std_logic; --write on RegisterBank
         
