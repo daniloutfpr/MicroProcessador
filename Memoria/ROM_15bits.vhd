@@ -35,7 +35,7 @@ architecture a_rom of rom is
         -- 2: CLR R8 (Op=0001, Rx=1000)
         2  => "0001" & "1000" & "0000000",
         -- 3: ADDI R8, 29 (Op=0101, Rx=1000, Imm=0011101)
-        3  => "0101" & "1000" & "0011101",
+        3  => "0101" & "1000" & "0000011",
 
         -- C. Soma R3 com R4 e guarda em R4
         -- 4: LOOP: ADD R4, R3 (Op=0011, Rx=0100, Ry=0011)
@@ -57,9 +57,52 @@ architecture a_rom of rom is
         -- 9: MOV R5, R4 (Op=0010, Rx=0101, Ry=0100)
         9  => "0010" & "0101" & "0100" & "000",
 
+        -- Vamos calcular 3 - 5 = -2 (N=1)
+        10 => "0001" & "0001" & "0000000", -- 10: CLR R1
+        11 => "0001" & "0010" & "0000000", -- 11: CLR R2
+        12 => "0101" & "0001" & "0000011", -- 12: ADDI R1, 3 (R1=3)
+        13 => "0101" & "0010" & "0000101", -- 13: ADDI R2, 5 (R2=5)
+        
+        -- SUB R1, R2 (R1 = 3-5 = -2). Flags: N=1, Z=0
+        -- A UC deve ativar 'psw_wr_en' aqui.
+        14 => "0100" & "0001" & "0010" & "000", -- 14: SUB R1, R2. (Define N=1)
+        
+        -- BPL +2. Como N=1, o desvio NÃO DEVE ser tomado.
+        -- A UC deve ler N=1 do PSW e 'take_branch' deve ser '0'.
+        15 => "1000" & "0000" & "0000010", -- 15: BPL +2 (Offset=2)
+
+        -- Esta instrução DEVE EXECUTAR (pois o salto falhou)
+        -- Copia R1 (que contém -2) para R6.
+        16 => "0010" & "0110" & "0001" & "000", -- 16: MOV R6, R1
+
+        -- Esta instrução é o alvo do salto (que não deve ocorrer)
+        17 => "0001" & "0111" & "0000000", -- 17: CLR R7 
+
+    -- Vamos calcular 5 - 3 = +2 (N=0)
+        18 => "0001" & "0001" & "0000000", -- 18: CLR R1
+        19 => "0001" & "0010" & "0000000", -- 19: CLR R2
+        20 => "0101" & "0001" & "0000101", -- 20: ADDI R1, 5 (R1=5)
+        21 => "0101" & "0010" & "0000011", -- 21: ADDI R2, 3 (R2=3)
+        
+        -- SUB R1, R2 (R1 = 5-3 = +2). Flags: N=0, Z=0
+        -- A UC deve ativar 'psw_wr_en' aqui.
+        22 => "0100" & "0001" & "0010" & "000", -- 22: SUB R1, R2. (Define N=0)
+        
+        -- BPL +2. Como N=0, o desvio DEVE ser tomado.
+        -- A UC deve ler N=0 e 'take_branch' deve ser '1'.
+        -- O PC deve saltar de 23 para 23 + 2 = 25.
+        23 => "1000" & "0000" & "0000010", -- 23: BPL +2 (Offset=2)
+
+        -- === ESTA INSTRUÇÃO DEVE SER PULADA ===
+        -- Se o PC executar 24, o teste FALHOU.
+        24 => "0001" & "0111" & "0000000", -- 24: CLR R7 (R7=0)
+
+        -- === ESTA INSTRUÇÃO É O ALVO DO SALTO ===
+        -- O PC deve chegar aqui (em 25) vindo direto do 23.
+        25 => "0001" & "0101" & "0000000", -- 25: CLR R5 (R5=0)
+
         -- Fim. Trava o processador.
-        -- 10: FIM: JMP 10 (Op=0110, Addr=0001010)
-        10 => "0110" & "0000" & "0001010",
+        26 => "0110" & "0000" & "0011010", -- 26: FIM: JMP 26 (Addr=26)
 
         -- Restante da memória é zero (NOP)
         others => (others => '0')

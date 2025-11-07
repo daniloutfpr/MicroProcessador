@@ -78,10 +78,16 @@ architecture a_processor of processor is
             opcode: in unsigned (3 downto 0); --[14-11] instructionS
             
             --Wr_en
-            pc_wr_en: out std_logic; -- Habilita escrita no PC
-            ri_wr_en: out std_logic; -- write on instruction register 
-            rb_wr_en: out std_logic; --write on RegisterBank
+            pc_wr_en: out std_logic;  -- Enables program counter writing
+            ri_wr_en: out std_logic;  -- write on instruction register 
+            rb_wr_en: out std_logic;  -- write on RegisterBank
+            psw_wr_en: out std_logic; -- write on psw register
             
+            --Flags (from PSW)
+            isNegative: in std_logic;
+            carry: in std_logic;
+            isZero: in std_logic;
+
             --Mux
             pc_sel  : out std_logic;
             mux_alu: out std_logic; --register b or ctc
@@ -90,15 +96,46 @@ architecture a_processor of processor is
         );
     end component;
 
+
+    component psw is
+      port(
+        clock: in std_logic;
+        reset: in std_logic;
+        wr_en: in std_logic;
+        data_in: in unsigned(2 downto 0);
+        
+        --Flags
+        isNegative: out std_logic;
+        carry: out std_logic;
+        isZero: out std_logic
+      );
+    end component;
+
     -- Internal signals
 
     signal s_pc_wr_en   : std_logic; 
     signal s_ri_wr_en   : std_logic; 
     signal s_rb_wr_en   : std_logic; 
+    signal s_psw_wr_en  : std_logic;
     signal s_pc_sel     : std_logic; 
     signal s_mux_alu    : std_logic; 
     signal s_mux_rb     : std_logic; 
     signal s_alu_op     : unsigned(1 downto 0);
+
+    -- ALU -> PSW
+    signal s_flag_N_calc : std_logic;           
+    signal s_flag_Z_calc : std_logic;
+    signal s_flag_C_calc : std_logic;
+    signal s_flags_calc_bus : unsigned(2 downto 0); -- 3 bits bus
+
+    -- PSW -> UC
+    signal s_flag_N_reg : std_logic;
+    signal s_flag_Z_reg : std_logic;
+    signal s_flag_C_reg : std_logic;
+
+    -- Branch address calculation
+    signal s_pc_branch_offset : signed(6 downto 0);   -- C2 Instruction offset 
+    signal s_pc_branch_target : unsigned(6 downto 0); -- Target address (PC + Offset)
 
     signal s_pc_out     : unsigned(6 downto 0);  -- 7 bits (PC -> ROM)
     signal s_rom_data   : unsigned(14 downto 0); -- 15 bits (ROM -> RI)
@@ -142,9 +179,9 @@ begin
             alu_out => s_alu_out,  
             
             
-            carry => open,
-            zero => open,
-            isNegative => open
+            carry => s_flag_C_calc, -- ALU => PSW
+            zero => s_flag_Z_calc, -- ALU => PSW
+            isNegative => s_flag_N_calc -- ALU => PSW
         );
     
     inst_ROM: rom
@@ -159,7 +196,12 @@ begin
             clock => clock,
             reset => reset,
             opcode => s_opcode_in, -- RI [14-11]
-            
+
+            isNegative => s_flag_N_reg, -- PSW => UC
+            isZero => s_flag_Z_reg, -- PSW => UC
+            carry => s_flag_C_reg, -- PSW => UC
+
+            psw_wr_en => s_psw_wr_en,
             pc_wr_en => s_pc_wr_en,
             ri_wr_en => s_ri_wr_en,
             rb_wr_en => s_rb_wr_en,
@@ -188,16 +230,50 @@ begin
             data_out => s_ri_out     
         );
 
+    inst_PSW: psw
+        port map(
+            clock    => clock,
+            reset    => reset,
+            wr_en    => s_psw_wr_en,  -- from UC
+            data_in  => s_flags_calc_bus, -- from ALU
+                
+            isNegative => s_flag_N_reg, -- => UC
+            carry      => s_flag_C_reg, -- => UC
+            isZero     => s_flag_Z_reg  -- => UC
+        );
+
     ----
+
+    s_flags_calc_bus <= s_flag_Z_calc & s_flag_N_calc & s_flag_C_calc;
+---- Lógica de Descodificação de Endereços (RI -> PC) ----
+
+    -- 1. Cálculo do Endereço de Desvio Relativo (Complemento de 2)
+    --    Converte o offset de 7 bits da instrução para 'signed'
+    s_pc_branch_offset <= signed(s_ri_out(6 downto 0));
+    
+    --    Soma o PC atual (unsigned->signed) com o offset (signed)
+    --    Esta soma faz a mágica do Complemento de 2 (PC + offset)
+    s_pc_branch_target <= unsigned( signed(s_pc_out) + s_pc_branch_offset );
+
+
+    -- 2. Mux de Endereço de Desvio
+    --    Seleciona o endereço que vai para o PC
+    --    Se for JMP (0110), usa o endereço absoluto (bits 6:0)
+    --    Se for BLS/BPL (0111/1000), usa o endereço relativo (PC + offset)
+    s_jump_addr <= s_ri_out(6 downto 0) when (s_opcode_in = "0110") else -- JMP
+                   s_pc_branch_target;  -- BLS, BPL, ou qualquer outro (padrão)
+
+
+    ---- Lógica de Descodificação (RI -> Muxes, RB) ----
+    
     s_opcode_in <= s_ri_out(14 downto 11); 
     s_rb_addr_a <= s_ri_out(10 downto 7);  
     s_rb_addr_b <= s_ri_out(6 downto 3);   
     s_rb_addr_w <= s_ri_out(10 downto 7);
 
-    s_jump_addr <= s_ri_out(6 downto 0);
+    -- s_jump_addr <= s_ri_out(6 downto 0); -- (EXCLUÍDA E MOVIDA PARA CIMA)
 
-
-    s_imm(14 downto 7) <= (others => s_ri_out(6)); -- Estende o bit 6
+    s_imm(14 downto 7) <= (others => s_ri_out(6)); -- (Sua lógica ADDI está correta)
     s_imm(6 downto 0)  <= s_ri_out(6 downto 0);
 
     s_alu_in_b <= s_rb_out_b when s_mux_alu = '0' else
@@ -206,5 +282,4 @@ begin
     s_rb_data_in <= s_alu_out when s_mux_rb = '0' else
                     (others => '0');
  
-
 end architecture a_processor;
