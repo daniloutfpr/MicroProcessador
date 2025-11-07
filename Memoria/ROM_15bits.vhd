@@ -14,7 +14,7 @@ architecture a_rom of rom is
 
     -- FORMATO DO NOSSO PROCESSADOR (Hardware):
     -- Op=[14:11], Rx=[10:7], Ry=[6:3], Imm/Jmp=[6:0]
-    
+
     -- Opcodes: CLR=0001, MOV=0010, ADD=0011, SUB=0100, ADDI=0101, JMP=0110
     
     -- Endereços de Registrador (4 bits):
@@ -23,54 +23,45 @@ architecture a_rom of rom is
     type rom_array_type is array (0 to 127) of unsigned(14 downto 0);
 
     signal rom_memory : rom_array_type := (
-        -- A. Carrega R3 com 5
+       -- A. Carrega R3 com 0
         -- 0: CLR R3 (Op=0001, Rx=0011)
         0  => "0001" & "0011" & "0000000",
-        -- 1: ADDI R3, 5 (Op=0101, Rx=0011, Imm=0000101)
-        1  => "0101" & "0011" & "0000101",
 
-        -- B. Carrega R4 com 8
-        -- 2: CLR R4 (Op=0001, Rx=0100)
-        2  => "0001" & "0100" & "0000000",
-        -- 3: ADDI R4, 8 (Op=0101, Rx=0100, Imm=0001000)
-        3  => "0101" & "0100" & "0001000",
+        -- B. Carrega R4 com 0
+        -- 1: CLR R4 (Op=0001, Rx=0100)
+        1  => "0001" & "0100" & "0000000",
 
-        -- C. Soma R3 com R4 e guarda em R5 (R5 = R3 + R4)
-        -- 4: MOV R5, R3 (Op=0010, Rx=0101, Ry=0011)
-        4  => "0010" & "0101" & "0011" & "000",
-        -- 5: ADD R5, R4 (Op=0011, Rx=0101, Ry=0100)
-        5  => "0011" & "0101" & "0100" & "000",
+        -- Setup: Carrega R8 com 29 (para comparar com R3)
+        -- 2: CLR R8 (Op=0001, Rx=1000)
+        2  => "0001" & "1000" & "0000000",
+        -- 3: ADDI R8, 29 (Op=0101, Rx=1000, Imm=0011101)
+        3  => "0101" & "1000" & "0011101",
 
-        -- D. Subtrai 1 de R5 (R5 = R5 - R6, onde R6=1)
-        -- 6: CLR R6 (Op=0001, Rx=0110)
-        6  => "0001" & "0110" & "0000000",
-        -- 7: ADDI R6, 1 (Op=0101, Rx=0110, Imm=0000001)
-        7  => "0101" & "0110" & "0000001",
-        -- 8: SUB R5, R6 (Op=0100, Rx=0101, Ry=0110)
-        8  => "0100" & "0101" & "0110" & "000",
+        -- C. Soma R3 com R4 e guarda em R4
+        -- 4: LOOP: ADD R4, R3 (Op=0011, Rx=0100, Ry=0011)
+        4  => "0011" & "0100" & "0011" & "000",
 
-        -- E. Salta para o endereço 20
-        -- 9: JMP 20 (Op=0110, Addr=0010100)
-        9  => "0110" & "0000" & "0010100", 
+        -- D. Soma 1 em R3
+        -- 5: ADDI R3, 1 (Op=0101, Rx=0011, Imm=0000001)
+        5  => "0101" & "0011" & "0000001",
 
-        -- F. Zera R5 (Nunca será executada)
-        -- 10: CLR R5 (Op=0001, Rx=0101)
-        10 => "0001" & "0101" & "0000000",
+        -- E. Compara R3 com R8 (R3 - 29) e salta se R3 <= 29
+        -- 6: MOV R7, R3 (Op=0010, Rx=0111, Ry=0011) -- 
+        6  => "0010" & "0111" & "0011" & "000",
+        -- 7: SUB R7, R8 (Op=0100, Rx=0111, Ry=1000) -- R7 = R3-R8. SETA FLAGS
+        7  => "0100" & "0111" & "1000" & "000",
+        -- 8: BLS -4 (Op=0111, Offset=1111100) -- Salta p/ 4 (8-4=4)
+        8  => "0111" & "0000" & "1111100",
 
-        -- ... (11 a 19 são NOPs/Zeros) ...
+        -- F. Copia valor de R4 para R5 (só executa quando R3=30)
+        -- 9: MOV R5, R4 (Op=0010, Rx=0101, Ry=0100)
+        9  => "0010" & "0101" & "0100" & "000",
 
-        -- G. No endereço 20, copia R5 para R3
-        -- 20: MOV R3, R5 (Op=0010, Rx=0011, Ry=0101)
-        20 => "0010" & "0011" & "0101" & "000",
+        -- Fim. Trava o processador.
+        -- 10: FIM: JMP 10 (Op=0110, Addr=0001010)
+        10 => "0110" & "0000" & "0001010",
 
-        -- H. Salta para o passo C (endereço 4)
-        -- 21: JMP 4 (Op=0110, Addr=0000100)
-        21 => "0110" & "0000" & "0000100",
-
-        -- I. Zera R3 (Nunca será executada)
-        -- 22: CLR R3 (Op=0001, Rx=0011)
-        22 => "0001" & "0011" & "0000000",
-
+        -- Restante da memória é zero (NOP)
         others => (others => '0')
     );
 

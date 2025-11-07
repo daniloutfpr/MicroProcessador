@@ -1,54 +1,33 @@
 // assembly.txt
 // Processador de 15-bit, 9-reg, 2-operandos (Sorteio)
+// PROGRAMA OBRIGATÓRIO - LABORATÓRIO 6
 // ----------------------------------------------------
 // Endereço | Instrução | Comentário
 // ----------------------------------------------------
 
 // --- Setup ---
+// --- A. Carrega R3 com 0 ---
+0:  CLR  R3       // R3 = 0 
+
+// --- B. Carrega R4 com 0 ---
+1:  CLR  R4       // R4 = 0 
+
+// --- Setup da constante para comparação (R8 = 29) ---
+2:  CLR  R8       // R8 será nosso registrador temporário
+3:  ADDI R8, 29   // R8 = 29 (para a condição R3 <= 29)
+
+// --- C. Soma R3 com R4 e guarda em R4 ---
+4: ADD  R4, R3   // C. R4 = R4 + R3 
+
+// --- D. Soma 1 em R3 ---
+5:  ADDI R3, 1    // D. R3 = R3 + 1 
+
+// --- E. Se R3<30 (R3<=29) salta para o passo C ---
 // 
+6:  MOV  R7, R3   // R7 = R3
+7:  SUB  R7, R8   // R7 = R3 - R8 (R3 - 29). SETA AS FLAGS (C, Z)
+8:  BLS  -4       // E. *Salto Relativo Obrigatório*
+                  
 
-// --- A. Carrega R3 com 5 ---
-
-2:  CLR  R3        
-3:  ADDI R3, 5     
-
-// --- B. Carrega R4 com 8 ---
-4:  CLR  R4        
-5:  ADDI R4, 8     
-
-// --- C. Soma R3 com R4 e guarda em R5 --- (PASSO_C)
-
-6:  CLR  R5        
-7:  ADD  R5, R3    
-8:  ADD  R5, R4    
-
-// --- D. Subtrai 1 de R5 ---
-// 
-9:  SUB  R5, R1    
-
-// --- E. Salta para o endereço 20 ---
-10: JMP  20       
-
-// --- F. Zera R5 (nunca será executada) ---
-11: CLR  R5
-
-// --- Preenchimento (NOPs) ---
-12: NOP        
-13: NOP        
-14: NOP        
-15: NOP
-16: NOP        
-17: NOP        
-18: NOP        
-19: NOP        
-
-// --- G. No endereço 20, copia R5 para R3 --- 
-20: MOV  R3, R5
-
-// --- H. Salta para o passo C (endereço 6) ---
-22: JMP  6         // PC <= 6
-
-// --- I. Zera R3 (nunca será executada) ---
-23: CLR  R3
-
-// --- Fim do programa ---
+// --- F. Copia valor de R4 para R5 --- (Só executa quando R3=30)
+9:  MOV  R5, R4   // F. R5 = R4 (R4 terá o resultado final)

@@ -7,6 +7,8 @@ ADD Rn,Rm:  0011 ddd sss xxxxx
 SUB Rn,Rm:  0100 ddd sss xxxxx
 ADDI Rn,c:  0101 ddd xxx xcccc
 JMP:        0110 xxx xxx eeeee
+BLS:        0111 xxxx  ooooooo
+BPL:        1000 xxxx  ooooooo
 
 onde
     ddd       identifica o registrador destino
@@ -14,3 +16,4 @@ onde
     ccc       identifica a constante
     eee       identifica o endereço 
     xxx       é irrelevante 
+    ooo       identifica o offset
