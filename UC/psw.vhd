@@ -13,7 +13,7 @@ entity psw is
     -- Flags
     isNegative: out std_logic;
     carry: out std_logic;
-    isZero: out std_logic;
+    isZero: out std_logic
   );
   end entity;
 
@@ -22,7 +22,7 @@ architecture a_psw of psw is
 begin
   process(reset, clock)
   begin
-    if reset = '1'
+    if reset = '1' then
       flag <= (others => '0');
     elsif rising_edge(clock) then
       if wr_en = '1' then

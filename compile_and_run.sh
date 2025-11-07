@@ -170,22 +170,42 @@ main() {
             compile_and_run_module "$PROJECT_ROOT/UC" "UC" "tb_uc" "uc_sim"
             [ "$open_view" == "--view" ] && open_gtkwave "$WORK_DIR/uc_sim.vcd"
             ;;
+            
+        # ==========================================================
+        # SEÇÃO 'processor' MODIFICADA
+        # ==========================================================
         processor)
             print_info "=========================================="
             print_info "Compiling complete Processor testbench"
             print_info "=========================================="
-            # Compile all dependencies first
-            find "$PROJECT_ROOT" -name "*.vhd" ! -name "*_tb.vhd" ! -name "tb_*.vhd" -type f | while read file; do
+            
+            # === ADIÇÃO SOLICITADA ===
+            # Compila o PSW *antes* de compilar o resto,
+            # para garantir que a dependência da UC seja resolvida.
+            print_info "Compiling dependency: psw.vhd"
+            compile_vhdl "$PROJECT_ROOT/UC/psw.vhd"
+            
+            # Compila todas as outras dependências
+            print_info "Compiling remaining entities..."
+            find "$PROJECT_ROOT" -name "*.vhd" \
+                ! -path "*/UC/psw.vhd" \
+                ! -name "*_tb.vhd" \
+                ! -name "tb_*.vhd" -type f | while read file; do
                 compile_vhdl "$file"
             done
-            # Compile testbenches
+            
+            # Compila os testbenches
+            print_info "Compiling testbenches..."
             find "$PROJECT_ROOT" -name "*_tb.vhd" -o -name "tb_*.vhd" -type f | while read file; do
                 compile_vhdl "$file"
             done
-            # Run processor testbench
+            
+            # Executa o testbench do processador
             run_testbench "processador_tb" "processor_sim"
             [ "$open_view" == "--view" ] && open_gtkwave "$WORK_DIR/processor_sim.vcd"
             ;;
+        # ==========================================================
+        
         clean)
             print_info "Cleaning work directory..."
             rm -rf "$WORK_DIR"

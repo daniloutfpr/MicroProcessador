@@ -14,9 +14,10 @@ entity UC is
         isZero: in std_logic;
 
         --Wr_en
-        pc_wr_en: out std_logic; -- enables write on Program Counter
-        ri_wr_en: out std_logic; -- write on instruction register 
-        rb_wr_en: out std_logic; --write on RegisterBank
+        pc_wr_en: out std_logic;    -- enables write on Program Counter
+        ri_wr_en: out std_logic;    -- write on instruction register 
+        rb_wr_en: out std_logic;    -- write on RegisterBank
+        psw_wr_en: out std_logic;   -- write on Processor Store Word register (for flags)
         
         --Mux
         pc_sel  : out std_logic;
@@ -29,6 +30,9 @@ end entity;
 
 architecture a_UC of UC is 
     signal state_s: unsigned(1 downto 0);
+
+    signal take_branch: std_logic; -- Decides if should branch (conditional or inconditional)
+
     signal jump: std_logic;
     component fsm_state
         port(
@@ -47,6 +51,11 @@ begin
                 state => state_s
             );
 
+    take_branch <= '1' when (opcode = "0110") or -- jump instruction (JMP)
+                        (opcode = "0111" and (carry = '1' or isZero = '1')) or -- branch if lower or same (BLS)
+                        (opcode = "1000" and isNegative = '0') -- branch if positive of zero (BPL)
+                    else '0';
+
     ri_wr_en <= '1' when (state_s = "00") else
                 '0';
 
@@ -56,9 +65,17 @@ begin
     pc_wr_en <= '1' when (state_s = "01")
                 else '0';
 
-    pc_sel <= '1' when (state_s = "01" and jump = '1')
+    pc_sel <= '1' when (state_s = "01" and take_branch = '1')
               else '0';
 
+    -- Only enables writing in the psw when there's an operation that will change the flags value
+    psw_wr_en <= '1' when(state_s = "10" and
+                    (opcode = "0011" or      -- ADD opcode
+                     opcode = "0100" or      -- SUB opcode
+                     opcode = "0101"))       -- ADDI opcode
+                    else '0';
+
+    -- Only enables writing in the registers for the operations that actually need to do it 
     rb_wr_en <= '1' when (state_s = "10") and 
                          (opcode = "0001" or  -- CLR
                           opcode = "0010" or  -- MOV
