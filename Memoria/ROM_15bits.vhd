@@ -32,7 +32,7 @@ architecture a_rom of rom is
         -- 2: CLR R8 (Op=0001, Rx=1000)
         2  => "0001" & "1000" & "0000000",
         -- 3: ADDI R8, 29 (Op=0101, Rx=1000, Imm=0011101)
-        3  => "0101" & "1000" & "00111001",
+        3  => "0101" & "1000" & "0011101",
 
         -- C. Soma R3 com R4 e guarda em R4
         -- (Este é o início do loop, no endereço 4)
