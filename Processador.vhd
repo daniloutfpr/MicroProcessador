@@ -245,35 +245,30 @@ begin
     ----
 
     s_flags_calc_bus <= s_flag_Z_calc & s_flag_N_calc & s_flag_C_calc;
----- Lógica de Descodificação de Endereços (RI -> PC) ----
 
-    -- 1. Cálculo do Endereço de Desvio Relativo (Complemento de 2)
-    --    Converte o offset de 7 bits da instrução para 'signed'
+
+    -- Address decodification logic (for jumps and branches) 
+
+    -- 1.  Calculation of the relative branch address (2 complement)
+    --    Converts the 7 bits offset from the instruction to signed (2 complement)
     s_pc_branch_offset <= signed(s_ri_out(6 downto 0));
     
-    --    Soma o PC atual (unsigned->signed) com o offset (signed)
-    --    Esta soma faz a mágica do Complemento de 2 (PC + offset)
+    --    Sums the current PC (unsigned to signed) with the offset (signed)
     s_pc_branch_target <= unsigned( signed(s_pc_out) + s_pc_branch_offset );
 
 
-    -- 2. Mux de Endereço de Desvio
-    --    Seleciona o endereço que vai para o PC
-    --    Se for JMP (0110), usa o endereço absoluto (bits 6:0)
-    --    Se for BLS/BPL (0111/1000), usa o endereço relativo (PC + offset)
+    --    Branch address MUX (selects the value that goes to PC)
+    --    If JMP (0110),uses the absolute address (bits 6:0)
+    --    If BLS/BPL (0111/1000), uses the relative address (PC + offset)
     s_jump_addr <= s_ri_out(6 downto 0) when (s_opcode_in = "0110") else -- JMP
-                   s_pc_branch_target;  -- BLS, BPL, ou qualquer outro (padrão)
+                   s_pc_branch_target;  -- relative branches
 
-
-    ---- Lógica de Descodificação (RI -> Muxes, RB) ----
-    
     s_opcode_in <= s_ri_out(14 downto 11); 
     s_rb_addr_a <= s_ri_out(10 downto 7);  
     s_rb_addr_b <= s_ri_out(6 downto 3);   
     s_rb_addr_w <= s_ri_out(10 downto 7);
 
-    -- s_jump_addr <= s_ri_out(6 downto 0); -- (EXCLUÍDA E MOVIDA PARA CIMA)
-
-    s_imm(14 downto 7) <= (others => s_ri_out(6)); -- (Sua lógica ADDI está correta)
+    s_imm(14 downto 7) <= (others => s_ri_out(6));
     s_imm(6 downto 0)  <= s_ri_out(6 downto 0);
 
     s_alu_in_b <= s_rb_out_b when s_mux_alu = '0' else
