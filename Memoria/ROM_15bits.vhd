@@ -19,7 +19,7 @@ architecture a_rom of rom is
     type rom_array_type is array (0 to 127) of unsigned(14 downto 0);
 
     signal rom_memory : rom_array_type := (
-       -- A. Load R3 with 0 (clear)
+        -- A. Load R3 with 0 (clear)
         -- 0: CLR R3 (Op=0001, Rx=0011)
         0  => "0001" & "0011" & "0000000",
 
