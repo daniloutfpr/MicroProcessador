@@ -14,7 +14,7 @@ architecture a_rom of rom is
 
 -- INSTRUCTION FORMAT: Op=[14:11], Rx=[10:7], Ry=[6:3], Imm/Jmp=[6:0]
     -- Opcodes: CLR=0001, MOV=0010, ADD=0011, SUB=0100, ADDI=0101
-    --          JMP=0110, BLS=0111, BPL = 1000
+    --          JMP=0110, BLS=0111, BPL = 1000, LW = 1001, SW = 1010
 
     type rom_array_type is array (0 to 127) of unsigned(14 downto 0);
 

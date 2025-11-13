@@ -18,11 +18,12 @@ entity UC is
         ri_wr_en: out std_logic;    -- write on instruction register 
         rb_wr_en: out std_logic;    -- write on RegisterBank
         psw_wr_en: out std_logic;   -- write on Processor Store Word register (for flags)
+        ram_wr_en: out std_logic;   -- write on RAM
         
         --Mux
         pc_sel  : out std_logic;
-        mux_alu: out std_logic; --register b or ctc
-        mux_rb : out std_logic;-- alu out or data in
+        mux_alu: out std_logic;     --register b or ctc
+        mux_rb : out std_logic;     -- alu out or data in
         alu_op : out unsigned(1 downto 0)
         
     );
@@ -75,6 +76,9 @@ begin
                      opcode = "0101"))       -- ADDI opcode
                     else '0';
 
+    ram_wr_en <= '1' when (state_s = "10") and (opcode = "1010") -- Only SW (store word) can write on RAM
+                    else '0';
+
     -- Only enables writing in the registers for the operations that actually need to do it 
     rb_wr_en <= '1' when (state_s = "10") and 
                          (opcode = "0001" or  -- CLR
@@ -84,10 +88,11 @@ begin
                           opcode = "0101")    -- ADDI
                          else '0';
 
-    mux_alu <= '1' when (opcode = "0101") -- ADDI
+    mux_alu <= '1' when (opcode = "0101")     -- ADDI
                else '0';
                
-    mux_rb <= '0'; -- always select alu out
+    mux_rb <= '1' when (opcode = "1001")      -- If the instruction is LW (load word), read from RAM, else from ULA
+               else '0';
 
     alu_op <= "00" when (opcode = "0011" or opcode = "0101") else -- ADD, ADDI
               "01" when (opcode = "0100") else                   -- SUB

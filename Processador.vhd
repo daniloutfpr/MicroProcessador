@@ -79,6 +79,7 @@ architecture a_processor of processor is
             
             --Wr_en
             pc_wr_en: out std_logic;  -- Enables program counter writing
+            ram_wr_en: out std_logic; -- write on RAM
             ri_wr_en: out std_logic;  -- write on instruction register 
             rb_wr_en: out std_logic;  -- write on RegisterBank
             psw_wr_en: out std_logic; -- write on psw register
@@ -111,12 +112,23 @@ architecture a_processor of processor is
       );
     end component;
 
+    component ram is
+      port(
+        clk: in std_logic;
+        addrees: in unsigned(6 downto 0);
+        wr_en: in std_logic;
+        data_in: in unsigned(15 downto 0);
+        data_out: out unsigned(15 downto 0);
+      );
+    end component;
+
     -- Internal signals
 
     signal s_pc_wr_en   : std_logic; 
     signal s_ri_wr_en   : std_logic; 
     signal s_rb_wr_en   : std_logic; 
     signal s_psw_wr_en  : std_logic;
+    signal s_ram_wr_en  : std_logic;
     signal s_pc_sel     : std_logic; 
     signal s_mux_alu    : std_logic; 
     signal s_mux_rb     : std_logic; 
@@ -146,6 +158,7 @@ architecture a_processor of processor is
     signal s_alu_in_b   : unsigned(14 downto 0); -- 15 bits (MUX ALU -> ALU)
     signal s_alu_out    : unsigned(14 downto 0); -- 15 bits (ALU -> MUX RB)
     signal s_rb_data_in : unsigned(14 downto 0); -- 15 bits (MUX RB -> RB)
+		signal s_ram_data_out : unsigned(14 downto 0); -- 15 bits (RAM -> MUX RB)
 
     signal s_opcode_in  : unsigned(3 downto 0);  -- 4 bits (RI -> UC)
     signal s_rb_addr_a  : unsigned(3 downto 0);  -- 4 bits (RI -> RB)
@@ -201,6 +214,7 @@ begin
             isZero => s_flag_Z_reg, -- PSW => UC
             carry => s_flag_C_reg, -- PSW => UC
 
+            ram_wr_en => s_ram_wr_en,
             psw_wr_en => s_psw_wr_en,
             pc_wr_en => s_pc_wr_en,
             ri_wr_en => s_ri_wr_en,
@@ -242,6 +256,17 @@ begin
             isZero     => s_flag_Z_reg  -- => UC
         );
 
+		inst_RAM: ram
+        port map(
+            clk      => clock,
+            wr_en    => s_ram_wr_en,         
+            
+            address => s_rb_out_b(6 downto 0), 
+            data_in  => s_rb_out_a,          
+            data_out => s_ram_data_out       
+        );
+end architecture a_processor;
+
     ----
 
     s_flags_calc_bus <= s_flag_Z_calc & s_flag_N_calc & s_flag_C_calc;
@@ -277,4 +302,6 @@ begin
     s_rb_data_in <= s_alu_out when s_mux_rb = '0' else
                     (others => '0');
  
+		s_rb_data_in <= s_alu_out when s_mux_rb_sel = '0' else
+                    s_ram_dado_out; -- <== RAM data
 end architecture a_processor;
