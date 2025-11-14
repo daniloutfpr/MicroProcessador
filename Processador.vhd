@@ -66,7 +66,7 @@ architecture a_processor of processor is
     component rom is
         port(
             clk: in std_logic;
-            adrees: in unsigned(6 downto 0); 
+            address: in unsigned(6 downto 0); 
             data : out unsigned(14 downto 0)
         );
     end component;
@@ -115,10 +115,10 @@ architecture a_processor of processor is
     component ram is
       port(
         clk: in std_logic;
-        addrees: in unsigned(6 downto 0);
+        address: in unsigned(6 downto 0);
         wr_en: in std_logic;
-        data_in: in unsigned(15 downto 0);
-        data_out: out unsigned(15 downto 0);
+        data_in: in unsigned(14 downto 0);   
+        data_out: out unsigned(14 downto 0)  
       );
     end component;
 
@@ -158,7 +158,7 @@ architecture a_processor of processor is
     signal s_alu_in_b   : unsigned(14 downto 0); -- 15 bits (MUX ALU -> ALU)
     signal s_alu_out    : unsigned(14 downto 0); -- 15 bits (ALU -> MUX RB)
     signal s_rb_data_in : unsigned(14 downto 0); -- 15 bits (MUX RB -> RB)
-		signal s_ram_data_out : unsigned(14 downto 0); -- 15 bits (RAM -> MUX RB)
+    signal s_ram_data_out : unsigned(14 downto 0); -- 15 bits (RAM -> MUX RB)
 
     signal s_opcode_in  : unsigned(3 downto 0);  -- 4 bits (RI -> UC)
     signal s_rb_addr_a  : unsigned(3 downto 0);  -- 4 bits (RI -> RB)
@@ -200,7 +200,7 @@ begin
     inst_ROM: rom
         port map(
             clk    => clock,      
-            adrees => s_pc_out,   
+            address => s_pc_out,   
             data   => s_rom_data 
         );
     
@@ -256,16 +256,16 @@ begin
             isZero     => s_flag_Z_reg  -- => UC
         );
 
-		inst_RAM: ram
+    inst_RAM: ram
         port map(
             clk      => clock,
             wr_en    => s_ram_wr_en,         
             
-            address => s_rb_out_b(6 downto 0), 
-            data_in  => s_rb_out_a,          
+            address  => s_rb_out_a(6 downto 0), 
+            data_in  => s_rb_out_b,          
             data_out => s_ram_data_out       
         );
-end architecture a_processor;
+
 
     ----
 
@@ -300,8 +300,6 @@ end architecture a_processor;
                   s_imm;
 
     s_rb_data_in <= s_alu_out when s_mux_rb = '0' else
-                    (others => '0');
- 
-		s_rb_data_in <= s_alu_out when s_mux_rb_sel = '0' else
-                    s_ram_dado_out; -- <== RAM data
+                    s_ram_data_out; -- MUX 2-para-1 (ALU ou RAM)
+
 end architecture a_processor;

@@ -1,33 +1,66 @@
 // assembly.txt
-// Processador de 15-bit, 9-reg, 2-operandos (Sorteio)
-// PROGRAMA OBRIGATÓRIO - LABORATÓRIO 6
+// 15-bit, 16-reg Processor
+// TEST PROGRAM - LAB 7 (RAM)
 // ----------------------------------------------------
-// Endereço | Instrução | Comentário
+// Address | Instruction | Comment
 // ----------------------------------------------------
+// Opcodes: CLR=0001, ADDI=0101, LW=1001, SW=1010, JMP=0110
+// Regs: $r1=0001, $r2=0010, $r3=0011 ... $r6=0110
 
-// --- Setup ---
-// --- A. Carrega R3 com 0 ---
-0:  CLR  R3       // R3 = 0 
+// --- PHASE 1: LOAD DATA ---
+// Load varied values into different regs
+0:   CLR  $r1        // r1 = 0
+1:   ADDI $r1, 20   // r1 = 20 (Data A)
+2:   CLR  $r2        // r2 = 0
+3:   ADDI $r2, 31   // r2 = 31 (Data B)
+4:   CLR  $r3        // r3 = 0
+5:   ADDI $r3, 5    // r3 = 5  (Data C)
 
-// --- B. Carrega R4 com 0 ---
-1:  CLR  R4       // R4 = 0 
+// --- PHASE 2: WRITE TO RAM ---
+// Use $r6 as address pointer
 
-// --- Setup da constante para comparação (R8 = 29) ---
-2:  CLR  R8       // R8 será nosso registrador temporário
-3:  ADDI R8, 29   // R8 = 29 (para a condição R3 <= 29)
+// Write Data A (20) to address 10
+6:   CLR  $r6        // r6 = 0
+7:   ADDI $r6, 10   // r6 = 10 (Address 10)
+8:   sw $r1, ($r6)  // RAM[10] = r1 (20)
 
-// --- C. Soma R3 com R4 e guarda em R4 ---
-4: ADD  R4, R3   // C. R4 = R4 + R3 
+// Write Data B (31) to address 25
+9:   CLR  $r6        // r6 = 0
+10:  ADDI $r6, 25   // r6 = 25 (Address 25)
+11:  sw $r2, ($r6)  // RAM[25] = r2 (31)
 
-// --- D. Soma 1 em R3 ---
-5:  ADDI R3, 1    // D. R3 = R3 + 1 
+// Write Data C (5) to address 3
+12:  CLR  $r6        // r6 = 0
+13:  ADDI $r6, 3    // r6 = 3 (Address 3)
+14:  sw $r3, ($r6)  // RAM[3] = r3 (5)
 
-// --- E. Se R3<30 (R3<=29) salta para o passo C ---
-// 
-6:  MOV  R7, R3   // R7 = R3
-7:  SUB  R7, R8   // R7 = R3 - R8 (R3 - 29). SETA AS FLAGS (C, Z)
-8:  BLS  -4       // E. *Salto Relativo Obrigatório*
-                  
+// Overwrite address 3 with Data A (20)
+// ($r6 still holds address 3)
+15:  sw $r1, ($r6)  // RAM[3] = r1 (20)
 
-// --- F. Copia valor de R4 para R5 --- (Só executa quando R3=30)
-9:  MOV  R5, R4   // F. R5 = R4 (R4 terá o resultado final)
+// --- PHASE 3: CLOBBER REGISTERS ---
+// Ensures read data comes from RAM, not regs
+16:  CLR $r1        // r1 = 0
+17:  CLR $r2        // r2 = 0
+18:  CLR $r3        // r3 = 0
+
+// --- PHASE 4: READ FROM RAM ---
+// Use $r6 as pointer, read to different regs ($r4, $r5, $r7)
+
+// Read RAM[25] (should be 31) into $r4
+19:  CLR  $r6        // r6 = 0
+20:  ADDI $r6, 25   // r6 = 25
+21:  lw $r4, ($r6)  // $r4 = RAM[25] (expected: 31)
+
+// Read RAM[3] (should be 20) into $r5
+22:  CLR  $r6        // r6 = 0
+23:  ADDI $r6, 3    // r6 = 3
+24:  lw $r5, ($r6)  // $r5 = RAM[3] (expected: 20)
+
+// Read RAM[10] (should be 20) into $r7
+25:  CLR  $r6        // r6 = 0
+26:  ADDI $r6, 10   // r6 = 10
+27:  lw $r7, ($r6)  // $r7 = RAM[10] (expected: 20)
+
+// --- END ---
+28:  JMP 28

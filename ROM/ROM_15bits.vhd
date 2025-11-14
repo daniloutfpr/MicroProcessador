@@ -5,61 +5,92 @@ use ieee.numeric_std.all;
 entity rom is
     port(
         clk: in std_logic;
-        addrees: in unsigned(6 downto 0);
+        address: in unsigned(6 downto 0);
         data : out unsigned(14 downto 0)
     );
 end entity;
 
 architecture a_rom of rom is
-
 -- INSTRUCTION FORMAT: Op=[14:11], Rx=[10:7], Ry=[6:3], Imm/Jmp=[6:0]
     -- Opcodes: CLR=0001, MOV=0010, ADD=0011, SUB=0100, ADDI=0101
     --          JMP=0110, BLS=0111, BPL = 1000, LW = 1001, SW = 1010
+    
+    -- LW/SW FORMAT: Op[14:11] | Rs_Base[10:7] | Rt_Data[6:3] | Ignored[2:0]
 
     type rom_array_type is array (0 to 127) of unsigned(14 downto 0);
 
     signal rom_memory : rom_array_type := (
-        -- A. Load R3 with 0 (clear)
-        -- 0: CLR R3 (Op=0001, Rx=0011)
-        0  => "0001" & "0011" & "0000000",
+        -- 0: CLR  $r1 (Reg 0001)
+        0  => "0001" & "0001" & "0000000",
+        -- 1: ADDI $r1, 20 (Imm 0010100)
+        1  => "0101" & "0001" & "0010100",
+        -- 2: CLR  $r2 (Reg 0010)
+        2  => "0001" & "0010" & "0000000",
+        -- 3: ADDI $r2, 31 (Imm 0011111)
+        3  => "0101" & "0010" & "0011111",
+        -- 4: CLR  $r3 (Reg 0011)
+        4  => "0001" & "0011" & "0000000",
+        -- 5: ADDI $r3, 5 (Imm 0000101)
+        5  => "0101" & "0011" & "0000101",
 
-        -- B. Load R4 with 0 (clear)
-        -- 1: CLR R4 (Op=0001, Rx=0100)
-        1  => "0001" & "0100" & "0000000",
+        
+        -- 6: CLR  $r6 (Reg 0110)
+        6  => "0001" & "0110" & "0000000",
+        -- 7: ADDI $r6, 10 (Imm 0001010)
+        7  => "0101" & "0110" & "0001010",
+        -- 8: sw $r1, ($r6) (Op=1010, Rs=r6, Rt=r1)
+        8  => "1010" & "0110" & "0001" & "000",
+        
+        -- 9: CLR  $r6
+        9  => "0001" & "0110" & "0000000",
+        -- 10: ADDI $r6, 25 (Imm 0011001)
+        10 => "0101" & "0110" & "0011001",
+        -- 11: sw $r2, ($r6) (Op=1010, Rs=r6, Rt=r2)
+        11 => "1010" & "0110" & "0010" & "000",
 
-        -- Setup (for step E): loads R8 with 29
-        -- (if R3 < 30 = if R3 <= 29)
-        -- 2: CLR R8 (Op=0001, Rx=1000)
-        2  => "0001" & "1000" & "0000000",
-        -- 3: ADDI R8, 29 (Op=0101, Rx=1000, Imm=0011101)
-        3  => "0101" & "1000" & "0011101",
+        -- 12: CLR  $r6
+        12 => "0001" & "0110" & "0000000",
+        -- 13: ADDI $r6, 3 (Imm 0000011)
+        13 => "0101" & "0110" & "0000011",
+        -- 14: sw $r3, ($r6) (Op=1010, Rs=r6, Rt=r3)
+        14 => "1010" & "0110" & "0011" & "000",
 
-        -- C. Add R3 with R4 and stores the result in R4
-        -- (Loop begining (4th instruction))
-        -- 4: LOOP: ADD R4, R3 (Op=0011, Rx=0100, Ry=0011)
-        4  => "0011" & "0100" & "0011" & "000",
+        -- 15: sw $r1, ($r6) (Overwrite RAM[3] with r1)
+        15 => "1010" & "0110" & "0001" & "000",
 
-        -- D. Add 1 in R3
-        -- 5: ADDI R3, 1 (Op=0101, Rx=0011, Imm=0000001)
-        5  => "0101" & "0011" & "0000001",
+        
+        -- 16: CLR $r1
+        16 => "0001" & "0001" & "0000000",
+        -- 17: CLR $r2
+        17 => "0001" & "0010" & "0000000",
+        -- 18: CLR $r3
+        18 => "0001" & "0011" & "0000000",
 
-        -- E. If R3 < 30 (R3 <= 29) branch to intruction C (Addr 4)
-        -- Use R7 as an aux for R3 - R8
-        -- 6: MOV R7, R3 (Op=0010, Rx=0111, Ry=0011) 
-        6  => "0010" & "0111" & "0011" & "000",
-        -- 7: SUB R7, R8 (Op=0100, Rx=0111, Ry=1000) -- R7 = R3-R8. Set flags (C, Z)
-        7  => "0100" & "0111" & "1000" & "000",
-        -- 8: BLS -4 (Op=0111, Offset=1111100) -- Branch to 4 (PC=8, 8-4=4)
-        8  => "0111" & "0000" & "1111100",
+        -- PHASE 4: READ FROM RAM
+        -- 19: CLR  $r6
+        19 => "0001" & "0110" & "0000000",
+        -- 20: ADDI $r6, 25 (Imm 0011001)
+        20 => "0101" & "0110" & "0011001",
+        -- 21: lw $r4, ($r6) (Op=1001, Rs=r6, Rt=r4)
+        21 => "1001" & "0110" & "0100" & "000",
 
-        -- F. Copies R4 into R5
-        -- (Only executes in the end of the loop, so R3 = 30)
-        -- 9: MOV R5, R4 (Op=0010, Rx=0101, Ry=0100)
-        9  => "0010" & "0101" & "0100" & "000",
+        -- 22: CLR  $r6
+        22 => "0001" & "0110" & "0000000",
+        -- 23: ADDI $r6, 3 (Imm 0000011)
+        23 => "0101" & "0110" & "0000011",
+        -- 24: lw $r5, ($r6) (Op=1001, Rs=r6, Rt=r5)
+        24 => "1001" & "0110" & "0101" & "000",
 
-        -- End. Stops the processor
-        -- 10: FIM: JMP 10 (Op=0110, Addr=0001010)
-        10 => "0110" & "0000" & "0001010",
+        -- 25: CLR  $r6
+        25 => "0001" & "0110" & "0000000",
+        -- 26: ADDI $r6, 10 (Imm 0001010)
+        26 => "0101" & "0110" & "0001010",
+        -- 27: lw $r7, ($r6) (Op=1001, Rs=r6, Rt=r7)
+        27 => "1001" & "0110" & "0111" & "000",
+
+        -- END
+        -- 28: JMP 28 (Addr 0011100)
+        28 => "0110" & "0000" & "0011100",
 
         -- The rest of the memory is zero (NOP)
         others => (others => '0')
@@ -70,7 +101,7 @@ begin
     process(clk)
     begin
         if rising_edge(clk) then
-            data <= rom_memory(to_integer(adrees));
+            data <= rom_memory(to_integer(address));
         end if;
     end process;
 end architecture a_rom;

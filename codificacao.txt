@@ -10,6 +10,7 @@ JMP:        0110 xxx xxx eeeee
 BLS:        0111 xxxx  ooooooo
 BPL:        1000 xxxx  ooooooo
 
+
 onde
     ddd       identifica o registrador destino
     sss       identifica o registrador fonte 
