@@ -53,7 +53,7 @@ begin
     -- Simulation duration process
     sim_time_proc: process
     begin
-        wait for 60 us; 
+        wait for 180 us; 
         finished <= '1';
         wait;
     end process sim_time_proc;

@@ -269,8 +269,8 @@ begin
             clk      => clock,
             wr_en    => s_ram_wr_en,         
             
-            address  => s_rb_out_a(6 downto 0), 
-            data_in  => s_rb_out_b,          
+            address  => s_rb_out_b(6 downto 0), 
+            data_in  => s_rb_out_a,          
             data_out => s_ram_data_out       
         );
 

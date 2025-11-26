@@ -91,6 +91,7 @@ begin
                           opcode = "0011" or  -- ADD
                           opcode = "0100" or  -- SUB
                           opcode = "0101" or  -- ADDI
+                          opcode = "1001" or  -- LW
                           opcode = "1011")    -- OR (MSB)
                          else '0';
 
@@ -107,7 +108,8 @@ begin
               "100" when (opcode = "1011") else                   -- OR (MSB)
               "000";
 
-   s_invalid_op <= '0' when (opcode = "0001" or  -- CLR
+   s_invalid_op <= '0' when(opcode = "0000" or  -- NOP 
+                            opcode = "0001" or  -- CLR
                             opcode = "0010" or  -- MOV
                             opcode = "0011" or  -- ADD
                             opcode = "0100" or  -- SUB
