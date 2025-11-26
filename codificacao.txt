@@ -1,20 +1,18 @@
-        MSB b14                  b0 LSB
-            |                   |
-NOP         0000 xxx xxx xxxxx
-CLR Rn      0001 ddd xxxx xxxx
-MOV Rn,Rm:  0010 ddd sss xxxxx
-ADD Rn,Rm:  0011 ddd sss xxxxx
-SUB Rn,Rm:  0100 ddd sss xxxxx
-ADDI Rn,c:  0101 ddd xxx xcccc
-JMP:        0110 xxx xxx eeeee
-BLS:        0111 xxxx  ooooooo
-BPL:        1000 xxxx  ooooooo
+CODIFICACAO_FINAL_CORRIGIDA.txt
+---------------------------------------------------------
+FORMATO: 15 bits [Op:14-11] [Rx:10-7] [Ry:6-3] [Lixo:2-0]
+---------------------------------------------------------
 
+NOP        0000 xxxx xxxx xxx
+CLR Rx     0001 dddd xxxx xxx    (dddd = Destino)
+MOV Rx,Ry  0010 dddd ssss xxx    (dddd = Destino, ssss = Fonte)
+ADD Rx,Ry  0011 dddd ssss xxx
+SUB Rx,Ry  0100 dddd ssss xxx
+ADDI Rx,c  0101 dddd cccc ccc    (Imediato 7 bits)
+JMP End    0110 xxxx eeee eee    (Endereço 7 bits)
+BLS Off    0111 xxxx oooo ooo    (Offset 7 bits)
+BPL Off    1000 xxxx oooo ooo    (Offset 7 bits)
 
-onde
-    ddd       identifica o registrador destino
-    sss       identifica o registrador fonte 
-    ccc       identifica a constante
-    eee       identifica o endereço 
-    xxx       é irrelevante 
-    ooo       identifica o offset
+LW Rx,Ry   1001 dddd aaaa xxx    (dddd = Destino, aaaa = Endereço na RAM) <--- CORRIGIDO
+SW Rx,Ry   1010 aaaa ssss xxx    (aaaa = Endereço na RAM, ssss = Dado para salvar)
+OR Rx,Ry   1011 dddd ssss xxx
