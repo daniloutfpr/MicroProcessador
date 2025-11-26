@@ -10,7 +10,8 @@ architecture a_processador_tb of processador_tb is
     component processor is  
         port( 
             clock: in std_logic;
-            reset: in std_logic
+            reset: in std_logic;
+            exception: out std_logic
         );
     end component;
 
@@ -18,12 +19,14 @@ architecture a_processador_tb of processador_tb is
     constant period_time : time := 100 ns; -- 10MHz clcok
     signal finished : std_logic := '0';
     signal tb_clk, tb_rst : std_logic;
+    signal s_exception: std_logic;
     
 begin
     -- Processor tested
     uut: processor port map ( 
         clock => tb_clk,  
-        reset => tb_rst
+        reset => tb_rst,
+        exception => s_exception
     );
 
     -- Process for clock generation

@@ -2,12 +2,13 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-
 -- Processor top-level entity
 entity processor is
     port (
         clock           : in std_logic;
-        reset           : in std_logic
+        reset           : in std_logic;
+        
+        exception : out std_logic 
     );
 end entity processor;
 
@@ -31,7 +32,8 @@ architecture a_processor of processor is
         port (
             ent0 : in unsigned(14 downto 0);
             ent1 : in unsigned(14 downto 0);
-            sel_op : in unsigned(1 downto 0);
+            -- ATUALIZADO: Agora são 3 bits para suportar o OR
+            sel_op : in unsigned(2 downto 0); 
             alu_out : out unsigned (14 downto 0);
             carry : out std_logic;
             zero : out std_logic;
@@ -49,16 +51,13 @@ architecture a_processor of processor is
         );
     end component;
 
-
     component PCCounterTop is 
         port(
             clock:        in  std_logic;
             reset:        in  std_logic;
             wr_en:        in  std_logic;
-    
-            pc_sel:       in  std_logic; -- Mux (Jump or Pc+1)
+            pc_sel:       in  std_logic; 
             jump_addr_in: in  unsigned (6 downto 0); 
-
             pc_out:       out unsigned (6 downto 0)
         );
     end component;
@@ -75,14 +74,14 @@ architecture a_processor of processor is
         port(
             clock: in std_logic;
             reset: in std_logic;
-            opcode: in unsigned (3 downto 0); --[14-11] instructionS
+            opcode: in unsigned (3 downto 0); 
             
             --Wr_en
-            pc_wr_en: out std_logic;  -- Enables program counter writing
-            ram_wr_en: out std_logic; -- write on RAM
-            ri_wr_en: out std_logic;  -- write on instruction register 
-            rb_wr_en: out std_logic;  -- write on RegisterBank
-            psw_wr_en: out std_logic; -- write on psw register
+            pc_wr_en: out std_logic;  
+            ram_wr_en: out std_logic; 
+            ri_wr_en: out std_logic;  
+            rb_wr_en: out std_logic;  
+            psw_wr_en: out std_logic; 
             
             --Flags (from PSW)
             isNegative: in std_logic;
@@ -91,12 +90,14 @@ architecture a_processor of processor is
 
             --Mux
             pc_sel  : out std_logic;
-            mux_alu: out std_logic; --register b or ctc
-            mux_rb : out std_logic;-- alu out or data in
-            alu_op : out unsigned(1 downto 0)
+            mux_alu: out std_logic; 
+            mux_rb : out std_logic;
+           
+            alu_op : out unsigned(2 downto 0);
+            
+            invalid_op : out std_logic
         );
     end component;
-
 
     component psw is
       port(
@@ -132,13 +133,18 @@ architecture a_processor of processor is
     signal s_pc_sel     : std_logic; 
     signal s_mux_alu    : std_logic; 
     signal s_mux_rb     : std_logic; 
-    signal s_alu_op     : unsigned(1 downto 0);
+    
+    -- ATUALIZADO: Barramento de controle da ULA aumentado para 3 bits
+    signal s_alu_op     : unsigned(2 downto 0);
+
+    -- ADICIONADO: Sinal interno para carregar o erro
+    signal s_invalid_op : std_logic;
 
     -- ALU -> PSW
     signal s_flag_N_calc : std_logic;           
     signal s_flag_Z_calc : std_logic;
     signal s_flag_C_calc : std_logic;
-    signal s_flags_calc_bus : unsigned(2 downto 0); -- 3 bits bus
+    signal s_flags_calc_bus : unsigned(2 downto 0); 
 
     -- PSW -> UC
     signal s_flag_N_reg : std_logic;
@@ -146,41 +152,43 @@ architecture a_processor of processor is
     signal s_flag_C_reg : std_logic;
 
     -- Branch address calculation
-    signal s_pc_branch_offset : signed(6 downto 0);   -- C2 Instruction offset 
-    signal s_pc_branch_target : unsigned(6 downto 0); -- Target address (PC + Offset)
+    signal s_pc_branch_offset : signed(6 downto 0);   
+    signal s_pc_branch_target : unsigned(6 downto 0); 
 
-    signal s_pc_out     : unsigned(6 downto 0);  -- 7 bits (PC -> ROM)
-    signal s_rom_data   : unsigned(14 downto 0); -- 15 bits (ROM -> RI)
-    signal s_ri_out     : unsigned(14 downto 0); -- 15 bits (Saída "travada" do RI)
+    signal s_pc_out     : unsigned(6 downto 0);  
+    signal s_rom_data   : unsigned(14 downto 0); 
+    signal s_ri_out     : unsigned(14 downto 0); 
     
-    signal s_rb_out_a   : unsigned(14 downto 0); -- 15 bits (RB out A -> ALU)
-    signal s_rb_out_b   : unsigned(14 downto 0); -- 15 bits (RB out B -> MUX ALU)
-    signal s_alu_in_b   : unsigned(14 downto 0); -- 15 bits (MUX ALU -> ALU)
-    signal s_alu_out    : unsigned(14 downto 0); -- 15 bits (ALU -> MUX RB)
-    signal s_rb_data_in : unsigned(14 downto 0); -- 15 bits (MUX RB -> RB)
-    signal s_ram_data_out : unsigned(14 downto 0); -- 15 bits (RAM -> MUX RB)
+    signal s_rb_out_a   : unsigned(14 downto 0); 
+    signal s_rb_out_b   : unsigned(14 downto 0); 
+    signal s_alu_in_b   : unsigned(14 downto 0); 
+    signal s_alu_out    : unsigned(14 downto 0); 
+    signal s_rb_data_in : unsigned(14 downto 0); 
+    signal s_ram_data_out : unsigned(14 downto 0); 
 
-    signal s_opcode_in  : unsigned(3 downto 0);  -- 4 bits (RI -> UC)
-    signal s_rb_addr_a  : unsigned(3 downto 0);  -- 4 bits (RI -> RB)
-    signal s_rb_addr_b  : unsigned(3 downto 0);  -- 4 bits (RI -> RB)
-    signal s_rb_addr_w  : unsigned(3 downto 0);  -- 4 bits (RI -> RB)
-    signal s_imm   : unsigned(14 downto 0); -- 15 bits (RI -> MUX ALU)
-    signal s_jump_addr  : unsigned(6 downto 0);  -- 7 bits (RI -> PC)
+    signal s_opcode_in  : unsigned(3 downto 0);  
+    signal s_rb_addr_a  : unsigned(3 downto 0);  
+    signal s_rb_addr_b  : unsigned(3 downto 0);  
+    signal s_rb_addr_w  : unsigned(3 downto 0);  
+    signal s_imm   : unsigned(14 downto 0); 
+    signal s_jump_addr  : unsigned(6 downto 0);  
 
 begin
       
+    -- Conectando a saída do Top-Level ao sinal interno
+    exception<= s_invalid_op;
 
     inst_RB: RegisterBank
         port map(
             clock    => clock,
             reset    => reset,
-            wr_en    => s_rb_wr_en,     -- UC (state "10")
+            wr_en    => s_rb_wr_en,    
             data_in  => s_rb_data_in,   
-            reg_sel_a=> s_rb_addr_a,    -- RI
-            reg_sel_b=> s_rb_addr_b,    -- RI
-            wr_addr  => s_rb_addr_w,    -- RI
-            data_out_a => s_rb_out_a,   -- ALU ent0
-            data_out_b => s_rb_out_b    -- MUX_ALU
+            reg_sel_a=> s_rb_addr_a,    
+            reg_sel_b=> s_rb_addr_b,    
+            wr_addr  => s_rb_addr_w,    
+            data_out_a => s_rb_out_a,   
+            data_out_b => s_rb_out_b    
         );
 
     -- ALU instantiation
@@ -188,13 +196,12 @@ begin
         port map(
             ent0 => s_rb_out_a,   
             ent1 => s_alu_in_b,   
-            sel_op => s_alu_op,   
+            sel_op => s_alu_op,    -- Conectando o sinal de 3 bits
             alu_out => s_alu_out,  
             
-            
-            carry => s_flag_C_calc, -- ALU => PSW
-            zero => s_flag_Z_calc, -- ALU => PSW
-            isNegative => s_flag_N_calc -- ALU => PSW
+            carry => s_flag_C_calc, 
+            zero => s_flag_Z_calc, 
+            isNegative => s_flag_N_calc 
         );
     
     inst_ROM: rom
@@ -208,11 +215,11 @@ begin
         port map(
             clock => clock,
             reset => reset,
-            opcode => s_opcode_in, -- RI [14-11]
+            opcode => s_opcode_in, 
 
-            isNegative => s_flag_N_reg, -- PSW => UC
-            isZero => s_flag_Z_reg, -- PSW => UC
-            carry => s_flag_C_reg, -- PSW => UC
+            isNegative => s_flag_N_reg, 
+            isZero => s_flag_Z_reg, 
+            carry => s_flag_C_reg, 
 
             ram_wr_en => s_ram_wr_en,
             psw_wr_en => s_psw_wr_en,
@@ -222,7 +229,8 @@ begin
             pc_sel   => s_pc_sel,
             mux_alu  => s_mux_alu,
             mux_rb   => s_mux_rb,
-            alu_op   => s_alu_op
+            alu_op   => s_alu_op,     -- Conectando o sinal de 3 bits
+            invalid_op => s_invalid_op -- Conectando o novo sinal de erro
         );
 
     inst_PC: PCCounterTop
@@ -239,7 +247,7 @@ begin
         port map(
             clock    => clock,
             reset    => reset,
-            wr_en    => s_ri_wr_en,  -- UC (state "00")
+            wr_en    => s_ri_wr_en,  
             data_in  => s_rom_data, 
             data_out => s_ri_out     
         );
@@ -248,12 +256,12 @@ begin
         port map(
             clock    => clock,
             reset    => reset,
-            wr_en    => s_psw_wr_en,  -- from UC
-            data_in  => s_flags_calc_bus, -- from ALU
+            wr_en    => s_psw_wr_en,  
+            data_in  => s_flags_calc_bus, 
                 
-            isNegative => s_flag_N_reg, -- => UC
-            carry      => s_flag_C_reg, -- => UC
-            isZero     => s_flag_Z_reg  -- => UC
+            isNegative => s_flag_N_reg, 
+            carry      => s_flag_C_reg, 
+            isZero     => s_flag_Z_reg  
         );
 
     inst_RAM: ram
@@ -274,17 +282,11 @@ begin
 
     -- Address decodification logic (for jumps and branches) 
 
-    -- 1.  Calculation of the relative branch address (2 complement)
-    --    Converts the 7 bits offset from the instruction to signed (2 complement)
     s_pc_branch_offset <= signed(s_ri_out(6 downto 0));
     
-    --    Sums the current PC (unsigned to signed) with the offset (signed)
     s_pc_branch_target <= unsigned( signed(s_pc_out) + s_pc_branch_offset );
 
 
-    --    Branch address MUX (selects the value that goes to PC)
-    --    If JMP (0110),uses the absolute address (bits 6:0)
-    --    If BLS/BPL (0111/1000), uses the relative address (PC + offset)
     s_jump_addr <= s_ri_out(6 downto 0) when (s_opcode_in = "0110") else -- JMP
                    s_pc_branch_target;  -- relative branches
 
@@ -300,6 +302,6 @@ begin
                   s_imm;
 
     s_rb_data_in <= s_alu_out when s_mux_rb = '0' else
-                    s_ram_data_out; -- MUX 2-para-1 (ALU ou RAM)
+                    s_ram_data_out; 
 
 end architecture a_processor;
