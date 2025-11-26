@@ -173,10 +173,17 @@ architecture a_processor of processor is
     signal s_imm   : unsigned(14 downto 0); 
     signal s_jump_addr  : unsigned(6 downto 0);  
 
+    signal s_ram_addr   : unsigned(6 downto 0);
+
 begin
       
     -- Conectando a saída do Top-Level ao sinal interno
     exception<= s_invalid_op;
+
+    -- Se LW (1001), Endereço = Ry (Out_B)
+    -- Se SW (1010) ou outro, Endereço = Rx (Out_A)
+    s_ram_addr <= s_rb_out_b(6 downto 0) when s_opcode_in = "1001" else
+                  s_rb_out_a(6 downto 0);
 
     inst_RB: RegisterBank
         port map(
@@ -269,8 +276,8 @@ begin
             clk      => clock,
             wr_en    => s_ram_wr_en,         
             
-            address  => s_rb_out_b(6 downto 0), 
-            data_in  => s_rb_out_a,          
+            address  => s_ram_addr,
+            data_in  => s_rb_out_b,          
             data_out => s_ram_data_out       
         );
 
