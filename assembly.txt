@@ -1,66 +1,155 @@
-// assembly.txt
-// 15-bit, 16-reg Processor
-// TEST PROGRAM - LAB 7 (RAM)
-// ----------------------------------------------------
-// Address | Instruction | Comment
-// ----------------------------------------------------
-// Opcodes: CLR=0001, ADDI=0101, LW=1001, SW=1010, JMP=0110
-// Regs: $r1=0001, $r2=0010, $r3=0011 ... $r6=0110
+================================================================================
+                                ISA REFERENCE
+================================================================================
+Data Width: 15 bits
+Address Space: 7 bits (0 to 127)
+Registers: R0 to R15
 
-// --- PHASE 1: LOAD DATA ---
-// Load varied values into different regs
-0:   CLR  $r1        // r1 = 0
-1:   ADDI $r1, 20   // r1 = 20 (Data A)
-2:   CLR  $r2        // r2 = 0
-3:   ADDI $r2, 31   // r2 = 31 (Data B)
-4:   CLR  $r3        // r3 = 0
-5:   ADDI $r3, 5    // r3 = 5  (Data C)
 
-// --- PHASE 2: WRITE TO RAM ---
-// Use $r6 as address pointer
+================================================================================
+ PROGRAM 1: SIEVE OF ERATOSTHENES (Prime Filter)
+ Description: Finds prime numbers up to 31.
+================================================================================
 
-// Write Data A (20) to address 10
-6:   CLR  $r6        // r6 = 0
-7:   ADDI $r6, 10   // r6 = 10 (Address 10)
-8:   sw $r1, ($r6)  // RAM[10] = r1 (20)
+-- PHASE 1: INITIALIZATION
+0:  CLR R8          -- Clear R8
+1:  ADDI R8, 31     -- R8 = 31 (Set Limit/Mask for modulo check)
+2:  CLR R1          -- Clear R1
+3:  ADDI R1, 1      -- R1 = 1 (Start counter)
 
-// Write Data B (31) to address 25
-9:   CLR  $r6        // r6 = 0
-10:  ADDI $r6, 25   // r6 = 25 (Address 25)
-11:  sw $r2, ($r6)  // RAM[25] = r2 (31)
+-- LOOP_INIT: Fills RAM[1..31] with values 1..31
+4:  SW R1, R1       -- Store val R1 at addr R1 (RAM[R1] = R1)
+5:  ADDI R1, 1      -- Increment R1
+6:  MOV R7, R1      -- Copy R1 to Temp R7
+7:  OR R7, R8       -- Check Mask: (R1 OR 31)
+8:  SUB R7, R8      -- Check Limit: (Result - 31)
+9:  BLS -5          -- If R1 <= 31, loop back to addr 4
+10: NOP             -- Delay slot / Safe space
 
-// Write Data C (5) to address 3
-12:  CLR  $r6        // r6 = 0
-13:  ADDI $r6, 3    // r6 = 3 (Address 3)
-14:  sw $r3, ($r6)  // RAM[3] = r3 (5)
+-- PHASE 2: FILTERING (Removing multiples)
+11: CLR R0          -- R0 = 0 (Value used to clear non-primes)
 
-// Overwrite address 3 with Data A (20)
-// ($r6 still holds address 3)
-15:  sw $r1, ($r6)  // RAM[3] = r1 (20)
+-- FILTER 2 (Remove multiples of 2)
+12: CLR R2          -- Clear R2
+13: ADDI R2, 4      -- R2 = 4 (Start at 2*2)
 
-// --- PHASE 3: CLOBBER REGISTERS ---
-// Ensures read data comes from RAM, not regs
-16:  CLR $r1        // r1 = 0
-17:  CLR $r2        // r2 = 0
-18:  CLR $r3        // r3 = 0
+-- LOOP_CHECK_2
+14: MOV R7, R2      -- Move iterator to temp
+15: OR R7, R8       -- Check against limit 31
+16: SUB R7, R8      -- Compare
+17: BLS +4          -- If R2 <= 31, jump to ERASE (addr 21)
+18: NOP
+19: JMP 25          -- Else, jump to Next Filter (Filter 3)
+20: NOP
 
-// --- PHASE 4: READ FROM RAM ---
-// Use $r6 as pointer, read to different regs ($r4, $r5, $r7)
+-- ERASE_2
+21: SW R2, R0       -- RAM[R2] = R0 (Write 0 to address R2)
+22: ADDI R2, 2      -- R2 = R2 + 2 (Next multiple)
+23: JMP 14          -- Jump back to LOOP_CHECK_2
+24: NOP
 
-// Read RAM[25] (should be 31) into $r4
-19:  CLR  $r6        // r6 = 0
-20:  ADDI $r6, 25   // r6 = 25
-21:  lw $r4, ($r6)  // $r4 = RAM[25] (expected: 31)
+-- FILTER 3 (Remove multiples of 3)
+25: CLR R2          -- Clear R2
+26: ADDI R2, 6      -- R2 = 6 (Start at 2*3)
 
-// Read RAM[3] (should be 20) into $r5
-22:  CLR  $r6        // r6 = 0
-23:  ADDI $r6, 3    // r6 = 3
-24:  lw $r5, ($r6)  // $r5 = RAM[3] (expected: 20)
+-- LOOP_CHECK_3
+27: MOV R7, R2      -- Temp check
+28: OR R7, R8       -- Mask
+29: SUB R7, R8      -- Compare
+30: BLS +4          -- If valid, jump to ERASE (addr 34)
+31: NOP
+32: JMP 38          -- Else, jump to Next Filter (Filter 5)
+33: NOP
 
-// Read RAM[10] (should be 20) into $r7
-25:  CLR  $r6        // r6 = 0
-26:  ADDI $r6, 10   // r6 = 10
-27:  lw $r7, ($r6)  // $r7 = RAM[10] (expected: 20)
+-- ERASE_3
+34: SW R2, R0       -- RAM[R2] = 0
+35: ADDI R2, 3      -- R2 = R2 + 3
+36: JMP 27          -- Jump back to LOOP_CHECK_3
+37: NOP
 
-// --- END ---
-28:  JMP 28
+-- FILTER 5 (Remove multiples of 5)
+38: CLR R2          -- Clear R2
+39: ADDI R2, 10     -- R2 = 10 (Start at 2*5)
+
+-- LOOP_CHECK_5
+40: MOV R7, R2      -- Temp check
+41: OR R7, R8       -- Mask
+42: SUB R7, R8      -- Compare
+43: BLS +4          -- If valid, jump to ERASE (addr 47)
+44: NOP
+45: JMP 51          -- Else, jump to READ PHASE
+46: NOP
+
+-- ERASE_5
+47: SW R2, R0       -- RAM[R2] = 0
+48: ADDI R2, 5      -- R2 = R2 + 5
+49: JMP 40          -- Jump back to LOOP_CHECK_5
+50: NOP
+
+-- PHASE 3: READ AND DISPLAY
+51: CLR R1          -- Clear R1
+52: ADDI R1, 2      -- R1 = 2 (Start reading from address 2)
+
+-- LOOP_READ
+53: LW R4, R1       -- Load RAM[R1] into R4
+54: NOP             -- Wait for stabilization
+55: MOV R6, R4      -- Move to R6 (Display Register)
+56: ADDI R1, 1      -- Increment Read Address
+57: MOV R7, R1      -- Check Loop Limit
+58: OR R7, R8       -- Mask
+59: SUB R7, R8      -- Compare
+60: BLS -7          -- If R1 <= 31, loop back to LW (addr 53)
+61: NOP
+
+-- HALT
+62: JMP 62          -- Infinite loop (End of program)
+
+
+================================================================================
+ PROGRAM 2: INSTRUCTION VALIDATION TEST
+ Description: Tests all opcodes (ALU, Logic, Memory, Branches).
+================================================================================
+
+--- 1. ARITHMETIC INITIALIZATION
+0:  CLR R1          -- Clear R1
+1:  ADDI R1, 10     -- R1 = 10
+2:  CLR R2          -- Clear R2
+3:  ADDI R2, 5      -- R2 = 5
+4:  CLR R3          -- Clear R3
+
+-- 2. ADDITION TEST
+5:  ADD R3, R1      -- R3 = 0 + 10 = 10
+6:  ADD R3, R2      -- R3 = 10 + 5 = 15
+7:  MOV R4, R3      -- R4 = 15 (Copy result to R4)
+
+-- 3. SUBTRACTION & BRANCH LOWER SAME (BLS) TEST
+8:  CLR R5          -- Clear R5
+9:  SUB R5, R3      -- R5 = 0 - 15 = -15 (Triggers Borrow/Carry & Negative Flag)
+10: BLS +2          -- Branch if Lower/Same (Offset +2 -> Target 12)
+11: JMP 1           -- TRAP: If BLS fails, jump to 1 (Infinite error loop)
+
+-- 4. MEMORY TEST (Store Word / Load Word)
+12: CLR R5          -- Clear R5 (Target of BLS). Sets Address = 0.
+13: SW R5, R4       -- RAM[R5] = R4 (Store 15 at Address 0)
+14: CLR R6          -- Clear R6 (Destination for Load)
+15: LW R6, R5       -- R6 = RAM[R5] (Load 15 from Address 0)
+
+-- 5. LOGIC (OR) TEST
+16: CLR R7          -- Clear R7
+17: ADDI R7, 1      -- R7 = 1
+18: OR R7, R6       -- R7 = 1 OR 15 = 15 (0001 OR 1111 = 1111)
+
+-- 6. BRANCH POSITIVE (BPL) TEST
+19: CLR R8          -- Clear R8
+20: ADDI R8, 20     -- R8 = 20
+21: SUB R8, R7      -- R8 = 20 - 15 = 5 (Result is Positive)
+22: BPL +2          -- Branch if Positive (Offset +2 -> Target 24)
+23: JMP 1           -- TRAP: If BPL fails, jump to 1
+
+-- 7. SUCCESS / HALT
+24: CLR R9          -- Clear R9 (Success Indicator reached)
+25: JMP 25          -- HALT: Infinite loop at end of program
+
+-- UNREACHABLE / PADDING
+26: 1111...         -- Invalid Opcode (Padding)
+27: ADDI...         -- Unreachable instruction
