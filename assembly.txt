@@ -11,98 +11,104 @@ Registers: R0 to R15
  Description: Finds prime numbers up to 31.
 ================================================================================
 
--- PHASE 1: INITIALIZATION
+-- 1. INITIALIZATION
 0:  CLR R8          -- Clear R8
-1:  ADDI R8, 31     -- R8 = 31 (Set Limit/Mask for modulo check)
+1:  ADDI R8, 31     -- R8 = 31 (Set Mask/Limit)
 2:  CLR R1          -- Clear R1
 3:  ADDI R1, 1      -- R1 = 1 (Start counter)
 
--- LOOP_INIT: Fills RAM[1..31] with values 1..31
-4:  SW R1, R1       -- Store val R1 at addr R1 (RAM[R1] = R1)
+-- LOOP INIT (Fill RAM 1..31)
+4:  SW R1, R1       -- RAM[R1] = R1
 5:  ADDI R1, 1      -- Increment R1
-6:  MOV R7, R1      -- Copy R1 to Temp R7
-7:  OR R7, R8       -- Check Mask: (R1 OR 31)
-8:  SUB R7, R8      -- Check Limit: (Result - 31)
-9:  BLS -5          -- If R1 <= 31, loop back to addr 4
-10: NOP             -- Delay slot / Safe space
+6:  MOV R7, R1      -- Temp check
+7:  OR R7, R8       -- Mask check
+8:  SUB R7, R8      -- Compare against 31
+9:  BLS -5          -- If <= 31, loop to addr 4
+10: NOP
 
--- PHASE 2: FILTERING (Removing multiples)
-11: CLR R0          -- R0 = 0 (Value used to clear non-primes)
+-- 2. FILTERS
+11: CLR R0          -- R0 = 0 (Eraser)
 
--- FILTER 2 (Remove multiples of 2)
+-- FILTER 2
 12: CLR R2          -- Clear R2
-13: ADDI R2, 4      -- R2 = 4 (Start at 2*2)
+13: ADDI R2, 4      -- Start at 4
 
--- LOOP_CHECK_2
-14: MOV R7, R2      -- Move iterator to temp
-15: OR R7, R8       -- Check against limit 31
+-- LOOP CHECK 2
+14: MOV R7, R2      -- Move R2 to Temp
+15: OR R7, R8       -- Mask
 16: SUB R7, R8      -- Compare
-17: BLS +4          -- If R2 <= 31, jump to ERASE (addr 21)
+17: BLS +4          -- If valid, jump to ERASE (addr 21)
 18: NOP
-19: JMP 25          -- Else, jump to Next Filter (Filter 3)
+19: JMP 25          -- Else, jump to Filter 3
 20: NOP
 
--- ERASE_2
-21: SW R2, R0       -- RAM[R2] = R0 (Write 0 to address R2)
-22: ADDI R2, 2      -- R2 = R2 + 2 (Next multiple)
-23: JMP 14          -- Jump back to LOOP_CHECK_2
+-- ERASE 2
+21: SW R2, R0       -- RAM[R2] = 0
+22: ADDI R2, 2      -- Next multiple of 2
+23: JMP 14          -- Jump to Check
 24: NOP
 
--- FILTER 3 (Remove multiples of 3)
+-- FILTER 3
 25: CLR R2          -- Clear R2
-26: ADDI R2, 6      -- R2 = 6 (Start at 2*3)
+26: ADDI R2, 6      -- Start at 6
 
--- LOOP_CHECK_3
-27: MOV R7, R2      -- Temp check
-28: OR R7, R8       -- Mask
-29: SUB R7, R8      -- Compare
+-- LOOP CHECK 3
+27: MOV R7, R2
+28: OR R7, R8
+29: SUB R7, R8
 30: BLS +4          -- If valid, jump to ERASE (addr 34)
 31: NOP
-32: JMP 38          -- Else, jump to Next Filter (Filter 5)
+32: JMP 38          -- Else, jump to Filter 5
 33: NOP
 
--- ERASE_3
+-- ERASE 3
 34: SW R2, R0       -- RAM[R2] = 0
-35: ADDI R2, 3      -- R2 = R2 + 3
-36: JMP 27          -- Jump back to LOOP_CHECK_3
+35: ADDI R2, 3      -- Next multiple of 3
+36: JMP 27          -- Jump to Check
 37: NOP
 
--- FILTER 5 (Remove multiples of 5)
+-- FILTER 5
 38: CLR R2          -- Clear R2
-39: ADDI R2, 10     -- R2 = 10 (Start at 2*5)
+39: ADDI R2, 10     -- Start at 10
 
--- LOOP_CHECK_5
-40: MOV R7, R2      -- Temp check
-41: OR R7, R8       -- Mask
-42: SUB R7, R8      -- Compare
+-- LOOP CHECK 5
+40: MOV R7, R2
+41: OR R7, R8
+42: SUB R7, R8
 43: BLS +4          -- If valid, jump to ERASE (addr 47)
 44: NOP
 45: JMP 51          -- Else, jump to READ PHASE
 46: NOP
 
--- ERASE_5
+-- ERASE 5
 47: SW R2, R0       -- RAM[R2] = 0
-48: ADDI R2, 5      -- R2 = R2 + 5
-49: JMP 40          -- Jump back to LOOP_CHECK_5
+48: ADDI R2, 5      -- Next multiple of 5
+49: JMP 40          -- Jump to Check
 50: NOP
 
--- PHASE 3: READ AND DISPLAY
-51: CLR R1          -- Clear R1
-52: ADDI R1, 2      -- R1 = 2 (Start reading from address 2)
+-- 3. READ AND DISPLAY
+51: CLR R1          -- Clear Pointer
+52: ADDI R1, 2      -- Start reading at 2
 
--- LOOP_READ
-53: LW R4, R1       -- Load RAM[R1] into R4
-54: NOP             -- Wait for stabilization
-55: MOV R6, R4      -- Move to R6 (Display Register)
-56: ADDI R1, 1      -- Increment Read Address
-57: MOV R7, R1      -- Check Loop Limit
-58: OR R7, R8       -- Mask
-59: SUB R7, R8      -- Compare
-60: BLS -7          -- If R1 <= 31, loop back to LW (addr 53)
+-- READ LOOP
+53: LW R4, R1       -- Load RAM[R1] to R4
+54: NOP
+55: MOV R6, R4      -- Display on R6
+56: ADDI R1, 1      -- Increment Pointer
+57: MOV R7, R1
+58: OR R7, R8
+59: SUB R7, R8      -- Check Limit
+60: BLS -7          -- Loop back to addr 53
 61: NOP
 
--- HALT
-62: JMP 62          -- Infinite loop (End of program)
+-- 4. FINAL TRAP TEST
+62: CLR R1          -- Clear R1
+63: 1111...         -- INVALID OPCODE (Intentional Break/Halt)
+
+-- UNREACHABLE CODE (Unless PC skips 63)
+64: ADDI R1, 1      -- Increment R1
+65: JMP 65          -- Infinite Loop (Trap) on address 65
+66: NOP
 
 
 ================================================================================
