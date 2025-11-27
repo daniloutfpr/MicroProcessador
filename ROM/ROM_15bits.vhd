@@ -71,7 +71,7 @@ architecture a_rom of rom is
 
         -- loop check 3 (Addr 27)
         27 => "0010" & "0111" & "0010" & "000", 
-        28 => "1011" & "0111" & "1000" & "000", -- OR R7, R8 (NOVO!)
+        28 => "1011" & "0111" & "1000" & "000", -- OR R7, R8 
         29 => "0100" & "0111" & "1000" & "000", 
         
         -- BLS for clearing (Target=34). PC=30. Offset = +4
