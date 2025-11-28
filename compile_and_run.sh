@@ -58,22 +58,22 @@ run_testbench() {
     }
     
     print_info "Running simulation for: $entity"
-    ghdl -r --workdir="$WORK_DIR" --work=work "$entity" --vcd="$WORK_DIR/$vcd_name.vcd" 2>&1 || {
+    ghdl -r --workdir="$WORK_DIR" --work=work "$entity" --wave="$WORK_DIR/$vcd_name.ghw" 2>&1 || {
         print_error "Failed to run $entity"
         return 1
     }
     
-    print_success "Generated VCD: $WORK_DIR/$vcd_name.vcd"
+    print_success "Generated GHW: $WORK_DIR/$vcd_name.ghw"
 }
 
-# Function to open VCD in GTKWave
+# Function to open GHW in GTKWave
 open_gtkwave() {
-    local vcd_file=$1
-    if [ -f "$vcd_file" ]; then
-        print_info "Opening $vcd_file in GTKWave..."
-        gtkwave "$vcd_file" &
+    local ghw_file=$1
+    if [ -f "$ghw_file" ]; then
+        print_info "Opening $ghw_file in GTKWave..."
+        gtkwave "$ghw_file" &
     else
-        print_error "VCD file not found: $vcd_file"
+        print_error "GHW file not found: $ghw_file"
         return 1
     fi
 }
@@ -139,36 +139,36 @@ main() {
     case "$target" in
         all)
             print_info "Compiling and running ALL modules..."
-            compile_and_run_module "$PROJECT_ROOT/FSM" "fsm_state" "fsm_tb" "fsm_sim" && [ "$open_view" == "--view" ] && open_gtkwave "$WORK_DIR/fsm_sim.vcd"
-            compile_and_run_module "$PROJECT_ROOT/Memoria" "rom" "tb_rom" "memoria_sim" && [ "$open_view" == "--view" ] && open_gtkwave "$WORK_DIR/memoria_sim.vcd"
-            compile_and_run_module "$PROJECT_ROOT/ProgramCounter" "ProgramCounter" "tb_PCCounterTop" "pc_sim" && [ "$open_view" == "--view" ] && open_gtkwave "$WORK_DIR/pc_sim.vcd"
-            compile_and_run_module "$PROJECT_ROOT/ULA" "ALU" "ALU_tb" "ula_sim" && [ "$open_view" == "--view" ] && open_gtkwave "$WORK_DIR/ula_sim.vcd"
-            compile_and_run_module "$PROJECT_ROOT/RegisterBank" "RegisterBank" "register_bank_tb" "register_sim" && [ "$open_view" == "--view" ] && open_gtkwave "$WORK_DIR/register_sim.vcd"
-            compile_and_run_module "$PROJECT_ROOT/UC" "UC" "tb_uc" "uc_sim" && [ "$open_view" == "--view" ] && open_gtkwave "$WORK_DIR/uc_sim.vcd"
+            compile_and_run_module "$PROJECT_ROOT/FSM" "fsm_state" "fsm_tb" "fsm_sim" && [ "$open_view" == "--view" ] && open_gtkwave "$WORK_DIR/fsm_sim.ghw"
+            compile_and_run_module "$PROJECT_ROOT/Memoria" "rom" "tb_rom" "memoria_sim" && [ "$open_view" == "--view" ] && open_gtkwave "$WORK_DIR/memoria_sim.ghw"
+            compile_and_run_module "$PROJECT_ROOT/ProgramCounter" "ProgramCounter" "tb_PCCounterTop" "pc_sim" && [ "$open_view" == "--view" ] && open_gtkwave "$WORK_DIR/pc_sim.ghw"
+            compile_and_run_module "$PROJECT_ROOT/ULA" "ALU" "ALU_tb" "ula_sim" && [ "$open_view" == "--view" ] && open_gtkwave "$WORK_DIR/ula_sim.ghw"
+            compile_and_run_module "$PROJECT_ROOT/RegisterBank" "RegisterBank" "register_bank_tb" "register_sim" && [ "$open_view" == "--view" ] && open_gtkwave "$WORK_DIR/register_sim.ghw"
+            compile_and_run_module "$PROJECT_ROOT/UC" "UC" "tb_uc" "uc_sim" && [ "$open_view" == "--view" ] && open_gtkwave "$WORK_DIR/uc_sim.ghw"
             ;;
         fsm)
             compile_and_run_module "$PROJECT_ROOT/FSM" "fsm_state" "fsm_tb" "fsm_sim"
-            [ "$open_view" == "--view" ] && open_gtkwave "$WORK_DIR/fsm_sim.vcd"
+            [ "$open_view" == "--view" ] && open_gtkwave "$WORK_DIR/fsm_sim.ghw"
             ;;
         memoria)
             compile_and_run_module "$PROJECT_ROOT/Memoria" "rom" "tb_rom" "memoria_sim"
-            [ "$open_view" == "--view" ] && open_gtkwave "$WORK_DIR/memoria_sim.vcd"
+            [ "$open_view" == "--view" ] && open_gtkwave "$WORK_DIR/memoria_sim.ghw"
             ;;
         pc)
             compile_and_run_module "$PROJECT_ROOT/ProgramCounter" "ProgramCounter" "tb_PCCounterTop" "pc_sim"
-            [ "$open_view" == "--view" ] && open_gtkwave "$WORK_DIR/pc_sim.vcd"
+            [ "$open_view" == "--view" ] && open_gtkwave "$WORK_DIR/pc_sim.ghw"
             ;;
         ula)
             compile_and_run_module "$PROJECT_ROOT/ULA" "ALU" "ALU_tb" "ula_sim"
-            [ "$open_view" == "--view" ] && open_gtkwave "$WORK_DIR/ula_sim.vcd"
+            [ "$open_view" == "--view" ] && open_gtkwave "$WORK_DIR/ula_sim.ghw"
             ;;
         register)
             compile_and_run_module "$PROJECT_ROOT/RegisterBank" "RegisterBank" "register_bank_tb" "register_sim"
-            [ "$open_view" == "--view" ] && open_gtkwave "$WORK_DIR/register_sim.vcd"
+            [ "$open_view" == "--view" ] && open_gtkwave "$WORK_DIR/register_sim.ghw"
             ;;
         uc)
             compile_and_run_module "$PROJECT_ROOT/UC" "UC" "tb_uc" "uc_sim"
-            [ "$open_view" == "--view" ] && open_gtkwave "$WORK_DIR/uc_sim.vcd"
+            [ "$open_view" == "--view" ] && open_gtkwave "$WORK_DIR/uc_sim.ghw"
             ;;
             
         # ==========================================================
@@ -202,7 +202,7 @@ main() {
             
             # Executa o testbench do processador
             run_testbench "processador_tb" "processor_sim"
-            [ "$open_view" == "--view" ] && open_gtkwave "$WORK_DIR/processor_sim.vcd"
+            [ "$open_view" == "--view" ] && open_gtkwave "$WORK_DIR/processor_sim.ghw"
             ;;
         # ==========================================================
         
